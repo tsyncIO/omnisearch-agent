@@ -26,8 +26,8 @@ def run_agent_interface(
     if input_image is None:
         init_term_reasoning = """```bash
 omnisearch@agent:~$ cat /proc/reasoning_stream
-[SYS_WARN] No image input detected in stdin.
-[STATUS] Please upload an image or click a preloaded test case.
+[SYS_WARN] No optical stream detected in stdin.
+[STATUS] Please drop an image or click a preloaded test case.
 ```"""
         init_term_web = """```bash
 omnisearch@agent:~$ netstat --active-rag --monitor
@@ -38,10 +38,8 @@ omnisearch@agent:~$ cat /var/out/synthesis.md
 [STATUS] Idle. Awaiting visual inspection session.
 ```"""
         yield (
-            "⚠️ **Please upload an image first.**",
+            "⚠️ **[SYS_ALERT]**: Please upload or select an image to initiate autonomous mission.",
             None,
-            None,
-            [],
             [],
             init_term_reasoning,
             init_term_web,
@@ -52,17 +50,16 @@ omnisearch@agent:~$ cat /var/out/synthesis.md
     if not query.strip():
         query = "Identify the key item or landmark in this image, zoom in if needed, and search the web for details."
 
-    # Immediate responsive yield
     boot_reasoning = """```bash
 omnisearch@agent:~$ cat /proc/reasoning_stream
-[SYS_INIT] Vision-Language grounding session starting...
-[CUDA] Initializing NVIDIA RTX A4000 16GB (4-bit NF4)
-[STATUS] Tokenizing image and formulating initial chain-of-thought...
+[SYS_INIT] Optical grounding matrix online.
+[CUDA] NVIDIA RTX A4000 16GB (4-bit NF4) active.
+[STATUS] Tokenizing visual features & compiling chain-of-thought...
 ```"""
     boot_web = """```bash
 omnisearch@agent:~$ netstat --active-rag --monitor
 [DAEMON] Live DuckDuckGo & Wikipedia RAG bridge active.
-[STATUS] Standby: monitoring entity recognition stream...
+[STATUS] Monitoring perception stream for entity detection...
 ```"""
     boot_synthesis = """```bash
 omnisearch@agent:~$ tail -f /var/log/executive_synthesis.md
@@ -71,10 +68,8 @@ omnisearch@agent:~$ tail -f /var/log/executive_synthesis.md
 ```"""
 
     yield (
-        "🚀 **Initializing Agent & Loading Weights...**",
+        "🚀 **[INITIALIZING]**: Loading weights into RTX A4000 & parsing mission prompt...",
         input_image,
-        input_image,
-        [],
         [],
         boot_reasoning,
         boot_web,
@@ -89,7 +84,7 @@ omnisearch@agent:~$ tail -f /var/log/executive_synthesis.md
         max_turns=max_turns,
         auto_web_search=auto_web
     ):
-        status = f"⚡ **Activity**: {state['status']}"
+        status = f"⚡ **[ACTIVITY]**: {state['status']}"
         annotated_img = state["annotated_image"]
         gallery = state["crop_gallery"]
         final_answer = state["final_answer"]
@@ -98,239 +93,402 @@ omnisearch@agent:~$ tail -f /var/log/executive_synthesis.md
 
         yield (
             status,
-            annotated_img,      # Canvas Full View
-            annotated_img,      # Canvas Side-by-Side
-            gallery,            # Gallery Lightbox View
-            gallery,            # Gallery Side-by-Side
-            thinking_md,        # Terminal 1: Deep Reasoning Trace
-            web_md,             # Terminal 2: Live Web Intelligence
-            final_answer        # Terminal 3: Final Synthesis
+            annotated_img,
+            gallery,
+            thinking_md,
+            web_md,
+            final_answer
         )
 
-# Modern, polished Cyber/Hacker CSS styling with authentic Terminal windows
+# Modern Cyber/Terminal CSS that fits completely in a single window
 custom_css = """
-/* App Header */
-.app-header {
-    background: linear-gradient(135deg, #0b0f19 0%, #161e2e 50%, #0b0f19 100%);
-    border: 1px solid rgba(56, 189, 248, 0.2);
-    border-radius: 14px;
-    padding: 22px 26px;
-    margin-bottom: 18px;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+/* GLOBAL RESET & VIEWPORT LOCK */
+* {
+    box-sizing: border-box !important;
 }
-.app-header-title {
-    font-size: 2.1rem;
-    font-weight: 800;
-    letter-spacing: -0.025em;
-    color: #f8fafc;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-.app-header-desc {
-    color: #94a3b8;
-    font-size: 0.98rem;
-    margin: 6px 0 0 0;
-}
-.badge-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(14, 165, 233, 0.15);
-    color: #38bdf8;
-    border: 1px solid rgba(56, 189, 248, 0.3);
-    padding: 4px 12px;
-    border-radius: 9999px;
-    font-size: 0.82rem;
-    font-weight: 600;
-    margin-top: 8px;
+html, body {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: #06090f !important;
+    color: #c9d1d9 !important;
+    font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, Menlo, Consolas, monospace !important;
 }
 
-/* Status Pill */
-.status-pill {
-    background: linear-gradient(90deg, rgba(6, 182, 212, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
-    border: 1px solid rgba(6, 182, 212, 0.35);
-    border-radius: 10px;
-    padding: 10px 16px;
-    font-weight: 600;
-    color: #38bdf8;
-    margin-bottom: 12px;
+/* GRADIO CONTAINER LOCK */
+.gradio-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    padding: 6px 12px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background-color: #06090f !important;
 }
 
-/* Section Header for Parallel Terminals */
-.terminal-section-banner {
-    background: linear-gradient(90deg, #161b22 0%, #0d1117 100%);
-    border: 1px solid #30363d;
-    border-radius: 10px;
-    padding: 12px 18px;
-    margin: 18px 0 12px 0;
+/* TERMINAL SYSTEM NAVBAR */
+.terminal-navbar {
+    background: linear-gradient(90deg, #0d131f 0%, #111a2e 50%, #0d131f 100%);
+    border: 1px solid #1c2738;
+    border-radius: 6px;
+    padding: 6px 12px;
+    height: 38px;
+    min-height: 38px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    margin-bottom: 6px;
+    flex: 0 0 auto;
 }
-.terminal-section-title {
-    font-family: ui-monospace, 'SFMono-Regular', 'JetBrains Mono', Menlo, Consolas, monospace;
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #58a6ff;
+.terminal-nav-left {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
-.terminal-section-subtitle {
-    font-size: 0.82rem;
-    color: #8b949e;
+.terminal-dots {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.terminal-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.terminal-dot.dot-red { background: #ff5f56; box-shadow: 0 0 5px rgba(255, 95, 86, 0.5); }
+.terminal-dot.dot-yellow { background: #ffbd2e; box-shadow: 0 0 5px rgba(255, 189, 46, 0.5); }
+.terminal-dot.dot-green { background: #27c93f; box-shadow: 0 0 5px rgba(39, 201, 63, 0.5); }
+
+.terminal-logo-tag {
+    font-size: 0.88rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #00f0ff;
+}
+.terminal-version-tag {
+    font-size: 0.72rem;
+    color: #64748b;
+    border-left: 1px solid #1e293b;
+    padding-left: 8px;
+}
+.terminal-nav-center {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.telemetry-item {
+    font-size: 0.72rem;
+    color: #64748b;
+    font-weight: 600;
+}
+.telemetry-val {
+    color: #38bdf8;
+}
+.terminal-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.status-live-dot {
+    width: 7px;
+    height: 7px;
+    background: #00ff9d;
+    border-radius: 50%;
+    box-shadow: 0 0 6px #00ff9d;
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0% { opacity: 0.4; }
+    50% { opacity: 1; }
+    100% { opacity: 0.4; }
+}
+.status-live-text {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #00ff9d;
+    letter-spacing: 0.05em;
 }
 
-/* Authentic Terminal Window Container */
-.terminal-container {
-    background: #0d1117 !important;
-    border: 1px solid #30363d !important;
-    border-radius: 10px !important;
+/* MAIN COCKPIT ROW (Fills remaining screen height) */
+.main-cockpit-row {
+    flex: 1 1 auto !important;
+    height: calc(100vh - 54px) !important;
+    max-height: calc(100vh - 54px) !important;
     overflow: hidden !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45) !important;
+    display: flex !important;
+    gap: 8px !important;
+    margin: 0 !important;
+}
+
+/* LEFT COLUMN: CONTROL CONSOLE */
+.control-console-col {
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow-y: auto !important;
+    background: #090e17 !important;
+    border: 1px solid #182232 !important;
+    border-radius: 6px !important;
+    padding: 8px !important;
     display: flex !important;
     flex-direction: column !important;
+    gap: 6px !important;
+}
+.control-console-col::-webkit-scrollbar {
+    width: 4px;
+}
+.control-console-col::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 2px;
 }
 
-/* Terminal Title Bar */
-.terminal-top-bar {
-    background: #161b22;
-    border-bottom: 1px solid #30363d;
-    padding: 9px 14px;
+/* RIGHT COLUMN: DISPLAY MATRIX */
+.display-matrix-col {
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    flex: 1 1 auto !important;
+}
+
+/* TELEMETRY STATUS PILL */
+.telemetry-status-bar {
+    height: 30px !important;
+    min-height: 30px !important;
+    max-height: 30px !important;
+    background: #0d131f !important;
+    border: 1px solid #1c2738 !important;
+    border-radius: 5px !important;
+    padding: 4px 10px !important;
+    font-size: 0.78rem !important;
+    color: #38bdf8 !important;
+    display: flex !important;
+    align-items: center !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* PANEL HEADER BAR */
+.panel-header-bar {
+    background: #0f1726;
+    border-bottom: 1px solid #1c2738;
+    padding: 4px 8px;
+    height: 24px;
+    min-height: 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     user-select: none;
 }
-.terminal-dots {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.terminal-dot {
-    width: 11px;
-    height: 11px;
-    border-radius: 50%;
-    display: inline-block;
-}
-.terminal-dot.dot-red { background: #ff5f56; }
-.terminal-dot.dot-yellow { background: #ffbd2e; }
-.terminal-dot.dot-green { background: #27c93f; }
-
-.terminal-title-text {
-    font-family: ui-monospace, 'SFMono-Regular', 'JetBrains Mono', Menlo, monospace;
-    font-size: 0.78rem;
+.panel-header-title {
+    font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.05em;
-    color: #c9d1d9;
+    color: #94a3b8;
     text-transform: uppercase;
 }
-
-.terminal-badge {
-    font-family: ui-monospace, 'SFMono-Regular', 'JetBrains Mono', Menlo, monospace;
-    font-size: 0.72rem;
-    padding: 2px 7px;
-    border-radius: 4px;
+.panel-header-badge {
+    font-size: 0.65rem;
+    padding: 1px 5px;
+    border-radius: 3px;
     font-weight: 700;
 }
 .badge-reasoning { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
 .badge-web { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
 .badge-synthesis { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
 
-/* Terminal Scrollable Body */
-.terminal-window-body {
-    background: #0d1117 !important;
-    height: 480px !important;
-    max-height: 480px !important;
-    overflow-y: auto !important;
-    padding: 14px 16px !important;
-    font-family: ui-monospace, 'SFMono-Regular', 'JetBrains Mono', Menlo, Consolas, monospace !important;
-    font-size: 0.88rem !important;
-    line-height: 1.6 !important;
-    color: #c9d1d9 !important;
+/* UPPER ROW: OPTICAL VIEWPORTS */
+.optical-viewports-row {
+    flex: 0 0 auto !important;
+    height: 240px !important;
+    max-height: 240px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    gap: 8px !important;
+    margin: 0 !important;
 }
-
-/* Custom Scrollbar for Terminal */
-.terminal-window-body::-webkit-scrollbar {
-    width: 6px;
-}
-.terminal-window-body::-webkit-scrollbar-track {
-    background: #0d1117;
-}
-.terminal-window-body::-webkit-scrollbar-thumb {
-    background: #30363d;
-    border-radius: 3px;
-}
-.terminal-window-body::-webkit-scrollbar-thumb:hover {
-    background: #8b949e;
-}
-
-/* Terminal Content Formatting */
-.terminal-window-body pre, .terminal-window-body code {
-    background: #161b22 !important;
-    border: 1px solid #30363d !important;
-    color: #58a6ff !important;
+.viewport-card {
+    height: 100% !important;
+    max-height: 100% !important;
+    background: #090e17 !important;
+    border: 1px solid #182232 !important;
     border-radius: 6px !important;
-    font-family: inherit !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
-.terminal-window-body a {
-    color: #58a6ff !important;
+.viewport-card .viewport-content {
+    flex: 1 1 auto !important;
+    height: 216px !important;
+    max-height: 216px !important;
+    overflow: hidden !important;
+    background: #06090f !important;
+}
+
+/* LOWER ROW: 3 PARALLEL TERMINALS */
+.terminals-matrix-row {
+    flex: 1 1 auto !important;
+    height: calc(100% - 280px) !important;
+    min-height: 200px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    gap: 8px !important;
+    margin: 0 !important;
+}
+.cockpit-terminal-card {
+    height: 100% !important;
+    max-height: 100% !important;
+    background: #090e17 !important;
+    border: 1px solid #182232 !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+.cockpit-terminal-body {
+    flex: 1 1 auto !important;
+    height: calc(100% - 24px) !important;
+    overflow-y: auto !important;
+    padding: 8px 10px !important;
+    font-size: 0.78rem !important;
+    line-height: 1.45 !important;
+    color: #cbd5e1 !important;
+    background: #06090f !important;
+}
+.cockpit-terminal-body::-webkit-scrollbar {
+    width: 4px;
+}
+.cockpit-terminal-body::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 2px;
+}
+
+/* TERMINAL TEXT FORMATTING */
+.cockpit-terminal-body pre, .cockpit-terminal-body code {
+    background: #0d131f !important;
+    border: 1px solid #1c2738 !important;
+    color: #38bdf8 !important;
+    border-radius: 4px !important;
+    font-size: 0.75rem !important;
+}
+.cockpit-terminal-body a {
+    color: #38bdf8 !important;
     text-decoration: underline !important;
 }
-.terminal-window-body strong {
-    color: #f0f6fc !important;
+.cockpit-terminal-body strong {
+    color: #f1f5f9 !important;
 }
-.terminal-window-body blockquote {
-    border-left: 3px solid #38bdf8 !important;
-    margin: 8px 0 !important;
-    padding: 4px 12px !important;
-    background: rgba(56, 189, 248, 0.05) !important;
-    color: #8b949e !important;
+.cockpit-terminal-body blockquote {
+    border-left: 2px solid #00f0ff !important;
+    margin: 4px 0 !important;
+    padding: 2px 8px !important;
+    background: rgba(0, 240, 255, 0.05) !important;
+    color: #94a3b8 !important;
+}
+
+/* TERMINAL BUTTONS */
+.term-btn-primary {
+    background: rgba(0, 240, 255, 0.12) !important;
+    border: 1px solid #00f0ff !important;
+    color: #00f0ff !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.05em !important;
+    font-size: 0.8rem !important;
+    border-radius: 4px !important;
+    transition: all 0.2s ease !important;
+}
+.term-btn-primary:hover {
+    background: #00f0ff !important;
+    color: #06090f !important;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.4) !important;
+}
+.term-btn-secondary {
+    background: #0d131f !important;
+    border: 1px solid #1c2738 !important;
+    color: #94a3b8 !important;
+    font-size: 0.75rem !important;
+    border-radius: 4px !important;
+}
+.term-btn-pill {
+    background: #0d131f !important;
+    border: 1px solid #1c2738 !important;
+    color: #cbd5e1 !important;
+    font-size: 0.72rem !important;
+    padding: 3px 6px !important;
+    border-radius: 3px !important;
+}
+.term-btn-pill:hover {
+    border-color: #38bdf8 !important;
+    color: #38bdf8 !important;
 }
 """
 
-with gr.Blocks(title="OmniSearch Studio") as demo:
+with gr.Blocks(title="OmniSearch Cockpit") as demo:
+    # 1. Compact Terminal Top Navbar
     gr.HTML("""
-    <div class="app-header">
-        <h1 class="app-header-title">🦅 OmniSearch Studio</h1>
-        <p class="app-header-desc">Autonomous Multi-Turn Visual Discovery & Live Web Intelligence — Powered by Mini-o3 & Qwen2.5-VL</p>
-        <div>
-            <span class="badge-chip">● NVIDIA RTX A4000 16GB (4-bit NF4)</span>
-            <span class="badge-chip" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(52, 211, 153, 0.3);">⚡ Live Active RAG (DDG + Wikipedia)</span>
-            <span class="badge-chip" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border-color: rgba(192, 132, 252, 0.3);">🔬 Multi-Turn Zoom Grounding</span>
+    <div class="terminal-navbar">
+        <div class="terminal-nav-left">
+            <div class="terminal-dots">
+                <span class="terminal-dot dot-red"></span>
+                <span class="terminal-dot dot-yellow"></span>
+                <span class="terminal-dot dot-green"></span>
+            </div>
+            <span class="terminal-logo-tag">OMNISEARCH_OS</span>
+            <span class="terminal-version-tag">v2.5 // CYBER-COCKPIT</span>
+        </div>
+        <div class="terminal-nav-center">
+            <span class="telemetry-item">⚡ HOST: <span class="telemetry-val">local-linux</span></span>
+            <span class="telemetry-item">🎮 GPU: <span class="telemetry-val">RTX A4000 16GB (NF4)</span></span>
+            <span class="telemetry-item">🧠 CORE: <span class="telemetry-val">Mini-o3 / Qwen2.5-VL</span></span>
+            <span class="telemetry-item">🌐 RAG: <span class="telemetry-val">DDG + Wiki [ONLINE]</span></span>
+        </div>
+        <div class="terminal-nav-right">
+            <span class="status-live-dot"></span>
+            <span class="status-live-text">KERNEL ACTIVE</span>
         </div>
     </div>
     """)
 
-    # Top Section: Controls (Left) & Visual Grounding Canvas (Right)
-    with gr.Row():
-        # Left: Controls, Upload & Settings
-        with gr.Column(scale=5):
-            with gr.Group():
-                image_input = gr.Image(
-                    type="pil",
-                    label="📸 Input Image (High-Resolution)",
-                    sources=["upload", "clipboard"],
-                    height=340
-                )
+    # 2. Main Full-Window Row
+    with gr.Row(elem_classes=["main-cockpit-row"]):
+        # Left: Control Console
+        with gr.Column(scale=3, min_width=290, elem_classes=["control-console-col"]):
+            gr.HTML("""
+            <div class="panel-header-bar">
+                <span class="panel-header-title">INPUT_CONSOLE // MISSION_CONTROL</span>
+                <span class="panel-header-badge" style="background:#1e293b; color:#94a3b8;">STDIN</span>
+            </div>
+            """)
 
-                query_input = gr.Textbox(
-                    label="💬 Agent Task & Search Objective",
-                    placeholder="e.g., Identify the objects, zoom in to read small text/labels, and search the web for details...",
-                    lines=3
-                )
+            image_input = gr.Image(
+                type="pil",
+                label="📸 Optical Stream Input",
+                sources=["upload", "clipboard"],
+                height=180
+            )
 
-                # Quick-fill Prompt Pills
-                gr.Markdown("<small style='color: var(--body-text-color-subdued); font-weight:600;'>⚡ Quick Prompts:</small>")
-                with gr.Row():
-                    p1_btn = gr.Button("🇩🇪 Sort German Waste Bins", size="sm", variant="secondary")
-                    p2_btn = gr.Button("🎬 Identify Venue & Brand", size="sm", variant="secondary")
-                    p3_btn = gr.Button("🏛️ Landmark & History", size="sm", variant="secondary")
-                    p4_btn = gr.Button("🔬 Deep Inspect Details", size="sm", variant="secondary")
+            query_input = gr.Textbox(
+                label="💬 Mission Objective Prompt",
+                placeholder="$ Enter autonomous visual objective...",
+                lines=2
+            )
 
-            with gr.Accordion("⚙️ Agent & Model Settings", open=False):
+            # Quick Prompt Pills
+            with gr.Row():
+                p1_btn = gr.Button("🇩🇪 Bins", size="sm", elem_classes=["term-btn-pill"])
+                p2_btn = gr.Button("🎬 Venue", size="sm", elem_classes=["term-btn-pill"])
+                p3_btn = gr.Button("🏛️ Landmark", size="sm", elem_classes=["term-btn-pill"])
+                p4_btn = gr.Button("🔬 Inspect", size="sm", elem_classes=["term-btn-pill"])
+
+            # Settings Accordion
+            with gr.Accordion("⚙️ Engine Parameters", open=False):
                 model_selector = gr.Dropdown(
                     choices=[
                         "Qwen/Qwen2.5-VL-3B-Instruct",
@@ -338,176 +496,171 @@ with gr.Blocks(title="OmniSearch Studio") as demo:
                         "Qwen/Qwen2.5-VL-7B-Instruct"
                     ],
                     value="Qwen/Qwen2.5-VL-3B-Instruct",
-                    label="Backbone Vision Model"
+                    label="Backbone VLM"
                 )
                 max_turns_slider = gr.Slider(
                     minimum=1, maximum=5, value=3, step=1,
-                    label="Max Exploration Turns"
+                    label="Max Reasoning Turns"
                 )
                 auto_web_checkbox = gr.Checkbox(
                     value=True,
-                    label="Auto-enrich with Live Web Search (DuckDuckGo + Wikipedia)"
+                    label="Active Web Grounding (DDG + Wiki)"
                 )
 
             with gr.Row():
-                submit_btn = gr.Button("🔍 Run Autonomous Search", variant="primary", scale=3, size="lg")
-                clear_btn = gr.ClearButton([image_input, query_input], value="↺ Reset", scale=1, size="lg")
+                submit_btn = gr.Button("⚡ [ EXECUTE ]", variant="primary", scale=3, elem_classes=["term-btn-primary"])
+                clear_btn = gr.ClearButton([image_input, query_input], value="↺ Reset", scale=1, elem_classes=["term-btn-secondary"])
 
-            # Built-in Examples
-            gr.Markdown("### 📂 Preloaded Test Cases")
-            gr.Examples(
-                examples=[
-                    [
-                        "sample_images/landmark_colosseum.jpg",
-                        "Identify this landmark, inspect its architectural features, and search the web for its history, original name, and significance.",
-                        3,
-                        True,
-                        "Qwen/Qwen2.5-VL-3B-Instruct"
+            # Preloaded Test Cases
+            with gr.Accordion("📂 Preloaded Test Cases", open=False):
+                gr.Examples(
+                    examples=[
+                        [
+                            "sample_images/landmark_colosseum.jpg",
+                            "Identify this landmark, inspect its architectural features, and search the web for its history, original name, and significance.",
+                            3,
+                            True,
+                            "Qwen/Qwen2.5-VL-3B-Instruct"
+                        ],
+                        [
+                            "sample_images/test.jpg",
+                            "Identify each waste bin by its color and German label, read the city name mentioned on the bins, and search the web to explain the waste separation system used here.",
+                            3,
+                            True,
+                            "Qwen/Qwen2.5-VL-3B-Instruct"
+                        ],
+                        [
+                            "sample_images/fig_demo_crop.jpg",
+                            "Identify the brand and text in this image, zoom in if needed, and search the web to explain what kind of venue or company this is.",
+                            3,
+                            True,
+                            "Qwen/Qwen2.5-VL-3B-Instruct"
+                        ]
                     ],
-                    [
-                        "sample_images/test.jpg",
-                        "Identify each waste bin by its color and German label, read the city name mentioned on the bins, and search the web to explain the waste separation system used here.",
-                        3,
-                        True,
-                        "Qwen/Qwen2.5-VL-3B-Instruct"
-                    ],
-                    [
-                        "sample_images/fig_demo_crop.jpg",
-                        "Identify the brand and text in this image, zoom in if needed, and search the web to explain what kind of venue or company this is.",
-                        3,
-                        True,
-                        "Qwen/Qwen2.5-VL-3B-Instruct"
-                    ]
-                ],
-                inputs=[image_input, query_input, max_turns_slider, auto_web_checkbox, model_selector]
-            )
+                    inputs=[image_input, query_input, max_turns_slider, auto_web_checkbox, model_selector]
+                )
 
-        # Right: Visual Inspection Studio
-        with gr.Column(scale=7):
+        # Right: Display Matrix (Upper Viewports + Lower Terminals)
+        with gr.Column(scale=9, elem_classes=["display-matrix-col"]):
+            # Status telemetry line
             status_output = gr.Markdown(
-                "⚡ **Activity**: Ready. Select an example or upload an image and click **Run Autonomous Search**.",
-                elem_classes=["status-pill"]
+                "⚡ **[TELEMETRY]**: Ready. Select an example or drop an image and click **[ EXECUTE ]**.",
+                elem_classes=["telemetry-status-bar"]
             )
 
-            # Visual Inspection Studio Tabs
-            with gr.Tabs():
-                with gr.Tab("🎯 Grounding Canvas (Full View)"):
-                    canvas_output_full = gr.Image(
-                        label="Visual Grounding & Detected Bounding Boxes",
+            # Upper Row: Optical Grounding Matrix (Canvas + Crops side-by-side)
+            with gr.Row(elem_classes=["optical-viewports-row"]):
+                # Viewport 1: Live Grounding Canvas
+                with gr.Column(scale=1, elem_classes=["viewport-card"]):
+                    gr.HTML("""
+                    <div class="panel-header-bar">
+                        <div class="terminal-dots">
+                            <span class="terminal-dot dot-red"></span>
+                            <span class="terminal-dot dot-yellow"></span>
+                            <span class="terminal-dot dot-green"></span>
+                        </div>
+                        <span class="panel-header-title">VIEWPORT_01 // OPTICAL_BOUNDING_MATRIX</span>
+                        <span class="panel-header-badge" style="background:#0284c7; color:#f0f9ff;">CANVAS</span>
+                    </div>
+                    """)
+                    canvas_output = gr.Image(
                         interactive=False,
-                        height=460
+                        height=214,
+                        show_label=False,
+                        elem_classes=["viewport-content"]
                     )
 
-                with gr.Tab("🔎 Zoomed Inspection Crops (Click to Enlarge)"):
-                    crops_output_gallery = gr.Gallery(
-                        label="Multi-Turn Zoomed Patches",
-                        columns=[2, 3],
-                        rows=[1, 2],
-                        height=460,
+                # Viewport 2: Zoomed Inspection Patches
+                with gr.Column(scale=1, elem_classes=["viewport-card"]):
+                    gr.HTML("""
+                    <div class="panel-header-bar">
+                        <div class="terminal-dots">
+                            <span class="terminal-dot dot-red"></span>
+                            <span class="terminal-dot dot-yellow"></span>
+                            <span class="terminal-dot dot-green"></span>
+                        </div>
+                        <span class="panel-header-title">TARGET_LOCK // MULTI_TURN_CROPS</span>
+                        <span class="panel-header-badge" style="background:#7c3aed; color:#f5f3ff;">GALLERY</span>
+                    </div>
+                    """)
+                    crops_gallery = gr.Gallery(
+                        columns=3,
+                        rows=1,
+                        height=214,
                         preview=True,
                         allow_preview=True,
                         object_fit="contain",
-                        show_label=True
+                        show_label=False,
+                        elem_classes=["viewport-content"]
                     )
 
-                with gr.Tab("🔄 Side-by-Side View"):
-                    with gr.Row():
-                        canvas_output_split = gr.Image(
-                            label="Focus Canvas",
-                            interactive=False,
-                            height=380
-                        )
-                        crops_output_split = gr.Gallery(
-                            label="Inspection Crops",
-                            columns=1,
-                            height=380,
-                            preview=True,
-                            allow_preview=True,
-                            object_fit="contain"
-                        )
-
-    # Section Banner for Parallel Side-by-Side Terminals
-    gr.HTML("""
-    <div class="terminal-section-banner">
-        <div class="terminal-section-title">
-            <span>⚡ AUTONOMOUS AGENT PARALLEL TERMINALS</span>
-        </div>
-        <div class="terminal-section-subtitle">
-            Concurrent live streaming: Deep Reasoning Trace (<think>) ⏐ Live Web Sources (Active RAG) ⏐ Final Synthesis
-        </div>
-    </div>
-    """)
-
-    # Bottom Section: 3 Authentic Parallel Side-by-Side Terminals
-    with gr.Row(elem_classes=["terminals-row"]):
-        # Terminal 1: Deep Reasoning Trace (<think>)
-        with gr.Column(scale=1, min_width=320):
-            with gr.Group(elem_classes=["terminal-container"]):
-                gr.HTML("""
-                <div class="terminal-top-bar">
-                    <div class="terminal-dots">
-                        <span class="terminal-dot dot-red"></span>
-                        <span class="terminal-dot dot-yellow"></span>
-                        <span class="terminal-dot dot-green"></span>
+            # Lower Row: 3 Parallel Side-by-Side Terminals
+            with gr.Row(elem_classes=["terminals-matrix-row"]):
+                # Terminal 1: Deep Reasoning Trace (<think>)
+                with gr.Column(scale=1, min_width=240, elem_classes=["cockpit-terminal-card"]):
+                    gr.HTML("""
+                    <div class="panel-header-bar">
+                        <div class="terminal-dots">
+                            <span class="terminal-dot dot-red"></span>
+                            <span class="terminal-dot dot-yellow"></span>
+                            <span class="terminal-dot dot-green"></span>
+                        </div>
+                        <span class="panel-header-title">TERMINAL 01 // REASONING_TRACE</span>
+                        <span class="panel-header-badge badge-reasoning">&lt;THINK&gt;</span>
                     </div>
-                    <span class="terminal-title-text">TERMINAL 01 // REASONING_TRACE</span>
-                    <span class="terminal-badge badge-reasoning">&lt;THINK&gt;</span>
-                </div>
-                """)
-                thinking_output = gr.Markdown(
-                    """```bash
+                    """)
+                    thinking_output = gr.Markdown(
+                        """```bash
 omnisearch@agent:~$ cat /proc/reasoning_stream
-[SYS_INIT] Qwen2.5-VL CoT streaming daemon active.
-[STATUS] Awaiting visual input & task prompt...
+[SYS_INIT] Qwen2.5-VL CoT daemon active.
+[STATUS] Awaiting visual input & objective...
 ```""",
-                    elem_classes=["terminal-window-body"]
-                )
+                        elem_classes=["cockpit-terminal-body"]
+                    )
 
-        # Terminal 2: Live Web Sources (Active RAG)
-        with gr.Column(scale=1, min_width=320):
-            with gr.Group(elem_classes=["terminal-container"]):
-                gr.HTML("""
-                <div class="terminal-top-bar">
-                    <div class="terminal-dots">
-                        <span class="terminal-dot dot-red"></span>
-                        <span class="terminal-dot dot-yellow"></span>
-                        <span class="terminal-dot dot-green"></span>
+                # Terminal 2: Live Web Sources (Active RAG)
+                with gr.Column(scale=1, min_width=240, elem_classes=["cockpit-terminal-card"]):
+                    gr.HTML("""
+                    <div class="panel-header-bar">
+                        <div class="terminal-dots">
+                            <span class="terminal-dot dot-red"></span>
+                            <span class="terminal-dot dot-yellow"></span>
+                            <span class="terminal-dot dot-green"></span>
+                        </div>
+                        <span class="panel-header-title">TERMINAL 02 // LIVE_WEB_INTEL</span>
+                        <span class="panel-header-badge badge-web">ACTIVE_RAG</span>
                     </div>
-                    <span class="terminal-title-text">TERMINAL 02 // LIVE_WEB_INTEL</span>
-                    <span class="terminal-badge badge-web">ACTIVE_RAG</span>
-                </div>
-                """)
-                web_output = gr.Markdown(
-                    """```bash
+                    """)
+                    web_output = gr.Markdown(
+                        """```bash
 omnisearch@agent:~$ netstat --active-rag --monitor
-[DAEMON] DuckDuckGo & Wikipedia search bridges online.
-[STATUS] Standby: monitoring entity recognition stream...
+[DAEMON] DuckDuckGo & Wikipedia bridge online.
+[STATUS] Standby: monitoring visual stream...
 ```""",
-                    elem_classes=["terminal-window-body"]
-                )
+                        elem_classes=["cockpit-terminal-body"]
+                    )
 
-        # Terminal 3: Final Synthesis
-        with gr.Column(scale=1, min_width=320):
-            with gr.Group(elem_classes=["terminal-container"]):
-                gr.HTML("""
-                <div class="terminal-top-bar">
-                    <div class="terminal-dots">
-                        <span class="terminal-dot dot-red"></span>
-                        <span class="terminal-dot dot-yellow"></span>
-                        <span class="terminal-dot dot-green"></span>
+                # Terminal 3: Final Synthesis
+                with gr.Column(scale=1, min_width=240, elem_classes=["cockpit-terminal-card"]):
+                    gr.HTML("""
+                    <div class="panel-header-bar">
+                        <div class="terminal-dots">
+                            <span class="terminal-dot dot-red"></span>
+                            <span class="terminal-dot dot-yellow"></span>
+                            <span class="terminal-dot dot-green"></span>
+                        </div>
+                        <span class="panel-header-title">TERMINAL 03 // FINAL_SYNTHESIS</span>
+                        <span class="panel-header-badge badge-synthesis">REPORT</span>
                     </div>
-                    <span class="terminal-title-text">TERMINAL 03 // FINAL_SYNTHESIS</span>
-                    <span class="terminal-badge badge-synthesis">REPORT</span>
-                </div>
-                """)
-                answer_output = gr.Markdown(
-                    """```bash
-omnisearch@agent:~$ tail -f /var/log/executive_synthesis.md
+                    """)
+                    answer_output = gr.Markdown(
+                        """```bash
+omnisearch@agent:~$ tail -f /var/log/synthesis.md
 [REPORT_GEN] Synthesis pipeline online.
 [STATUS] Waiting for inspection & verification...
 ```""",
-                    elem_classes=["terminal-window-body"]
-                )
+                        elem_classes=["cockpit-terminal-body"]
+                    )
 
     # Quick prompt button click events
     p1_btn.click(
@@ -539,10 +692,8 @@ omnisearch@agent:~$ tail -f /var/log/executive_synthesis.md
         ],
         outputs=[
             status_output,
-            canvas_output_full,
-            canvas_output_split,
-            crops_output_gallery,
-            crops_output_split,
+            canvas_output,
+            crops_gallery,
             thinking_output,
             web_output,
             answer_output
@@ -562,7 +713,7 @@ if __name__ == "__main__":
         share=args.share,
         theme=gr.themes.Soft(
             primary_hue="cyan",
-            font=[gr.themes.GoogleFont("Plus Jakarta Sans"), "system-ui", "sans-serif"]
+            font=[gr.themes.GoogleFont("JetBrains Mono"), "ui-monospace", "monospace"]
         ),
         css=custom_css
     )
