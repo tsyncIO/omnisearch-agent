@@ -5,7 +5,17 @@
 [![PyTorch 2.4+](https://img.shields.io/badge/PyTorch-2.8.0%2Bcu128-orange.svg)](https://pytorch.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-yellow.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Target GPU: 16GB VRAM](https://img.shields.io/badge/Hardware-RTX_A4000_16GB-green.svg)](https://www.nvidia.com/)
-[![Built with Gradio](https://img.shields.io/badge/UI-Gradio_5.0-red.svg)](https://gradio.app/)
+[![Built with Gradio](https://img.shields.io/badge/UI-Gradio_6.0-red.svg)](https://gradio.app/)
+
+---
+
+<p align="center">
+  <img src="assets/demo.gif" alt="OmniSearch Agent Cyber Cockpit Demo" width="100%" />
+</p>
+
+<p align="center">
+  <b>⚡ Autonomous Cyber-Cockpit Demo:</b> Investigating the Roman Colosseum with multi-turn visual perception, live DuckDuckGo + Wikipedia grounding, and real-time executive report synthesis.
+</p>
 
 ---
 

@@ -218,6 +218,14 @@ html, body {
     overflow: hidden !important;
 }
 
+/* DISABLE GRADIO'S INTRUSIVE GREY LOADING OVERLAY */
+.wrap.default.full.translucent,
+.wrap.default.full,
+.loading-status,
+.progress-bar-wrap {
+    display: none !important;
+}
+
 /* GRADIO CONTAINER: FIT EXACTLY IN 100VH WITHOUT WINDOW SCROLL */
 .gradio-container {
     max-width: 100% !important;
