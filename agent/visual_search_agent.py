@@ -445,10 +445,11 @@ class OmniSearchVisualAgent:
 
                 final_formatted = (
                     "```bash\n"
-                    "omnisearch@agent:~$ cat /var/out/synthesis.md\n"
-                    "[REPORT_GEN] 200 OK • Synthesis Complete\n"
+                    "omnisearch@agent:~$ cat /var/out/EXECUTIVE_REPORT.md\n"
+                    "[REPORT_GEN] 200 OK • EXECUTIVE SYNTHESIS REPORT\n"
                     "```\n\n"
-                    f"{answer}"
+                    f"### 🎯 Key Findings & Visual Evidence\n\n"
+                    f"{answer}\n"
                 )
 
                 add_log("✅", "COMPLETE", "Autonomous mission concluded with verified report.")
@@ -482,10 +483,11 @@ class OmniSearchVisualAgent:
 
         final_formatted = (
             "```bash\n"
-            "omnisearch@agent:~$ cat /var/out/synthesis.md\n"
-            "[REPORT_GEN] 200 OK • Max Exploration Turns Reached\n"
+            "omnisearch@agent:~$ cat /var/out/EXECUTIVE_REPORT.md\n"
+            "[REPORT_GEN] 200 OK • MAXIMUM EXPLORATION TURNS REACHED\n"
             "```\n\n"
-            f"{fallback_ans}"
+            f"### 🎯 Key Findings & Visual Evidence\n\n"
+            f"{fallback_ans}\n"
         )
 
         add_log("✅", "COMPLETE", "Mission concluded with best visual synthesis.")
