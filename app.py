@@ -198,7 +198,8 @@ with gr.Blocks(title="OmniSearch Studio") as demo:
                 with gr.Row():
                     p1_btn = gr.Button("🇩🇪 Sort German Waste Bins", size="sm", variant="secondary")
                     p2_btn = gr.Button("🎬 Identify Venue & Brand", size="sm", variant="secondary")
-                    p3_btn = gr.Button("🔬 Deep Inspect Details", size="sm", variant="secondary")
+                    p3_btn = gr.Button("🏛️ Landmark & History", size="sm", variant="secondary")
+                    p4_btn = gr.Button("🔬 Deep Inspect Details", size="sm", variant="secondary")
 
             with gr.Accordion("⚙️ Agent & Model Settings", open=False):
                 model_selector = gr.Dropdown(
@@ -227,6 +228,13 @@ with gr.Blocks(title="OmniSearch Studio") as demo:
             gr.Markdown("### 📂 Preloaded Test Cases")
             gr.Examples(
                 examples=[
+                    [
+                        "sample_images/landmark_colosseum.jpg",
+                        "Identify this landmark, inspect its architectural features, and search the web for its history, original name, and significance.",
+                        3,
+                        True,
+                        "Qwen/Qwen2.5-VL-3B-Instruct"
+                    ],
                     [
                         "sample_images/test.jpg",
                         "Identify each waste bin by its color and German label, read the city name mentioned on the bins, and search the web to explain the waste separation system used here.",
@@ -316,6 +324,10 @@ with gr.Blocks(title="OmniSearch Studio") as demo:
         outputs=[query_input]
     )
     p3_btn.click(
+        fn=lambda: "Identify this landmark, inspect its architectural features, and search the web for its history, original name, and significance.",
+        outputs=[query_input]
+    )
+    p4_btn.click(
         fn=lambda: "Examine this image with deep inspection, zoom in on any fine details, numbers or labels, and explain everything visible.",
         outputs=[query_input]
     )
