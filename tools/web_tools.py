@@ -54,7 +54,10 @@ def extract_search_intent_keywords(text: str, user_query: str = "") -> str:
         "The", "This", "That", "Here", "There", "When", "What", "Where", "Who", "Why", "How",
         "In", "On", "At", "It", "Its", "Looking", "Observation", "Action", "Turn", "Agent",
         "Based", "Image", "Visible", "First", "Second", "Third", "Please", "After", "User",
-        "Let", "Now", "Next", "Zoom", "Crop", "Region", "Focus", "High", "Low"
+        "Let", "Now", "Next", "Zoom", "Crop", "Region", "Focus", "High", "Low",
+        "Below", "Following", "Above", "Summary", "Identification", "Details", "Answer",
+        "Conclusion", "Note", "Task", "Query", "Question", "Objective", "Output", "Response",
+        "Report", "Synthesis", "Item", "Items", "Object", "Objects", "Key", "Main", "Features"
     }
     filtered_entities = [e for e in entities if e not in common_stopwords and len(e) > 3]
     if filtered_entities:

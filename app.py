@@ -50,11 +50,16 @@ def format_hud_stepper(stage: str, progress: int, status_text: str) -> str:
     empty = 20 - filled
     ascii_bar = "█" * filled + "░" * empty
 
+    report_banner = ""
+    if stage == "COMPLETE":
+        report_banner = '<span class="hud-report-alert">📑 [REPORT READY BELOW]</span>'
+
     return f"""
     <div class="hud-stepper-box">
         <div class="hud-top-line">
             <div class="hud-stages-pills">{chips_html}</div>
             <div class="hud-metric-box">
+                {report_banner}
                 <span class="hud-ascii-bar">[{ascii_bar}]</span>
                 <span class="hud-percent-pill">{progress}%</span>
             </div>
@@ -77,7 +82,6 @@ def format_event_logs(logs: List[str]) -> str:
 [00.00s] 🟢 [STANDBY] Event logger daemon active.
 [00.00s] 💡 [READY] Select an example or upload an image and click [EXECUTE].
 ```"""
-    # Keep last 14 logs for clean viewport fit
     recent = logs[-14:]
     return "```bash\n" + "\n".join(recent) + "\n```"
 
@@ -104,7 +108,7 @@ omnisearch@agent:~$ netstat --active-rag --monitor
 [SYS_HALT] Waiting for visual stream before dispatching queries.
 ```"""
         init_term_synthesis = """```bash
-omnisearch@agent:~$ cat /var/out/synthesis.md
+omnisearch@agent:~$ cat /var/out/EXECUTIVE_REPORT.md
 [STATUS] Idle. Awaiting visual inspection session.
 ```"""
         yield (
@@ -114,6 +118,7 @@ omnisearch@agent:~$ cat /var/out/synthesis.md
             [],
             init_term_reasoning,
             init_term_web,
+            init_term_synthesis,
             init_term_synthesis
         )
         return
@@ -139,7 +144,7 @@ omnisearch@agent:~$ netstat --active-rag --monitor
 [STATUS] Monitoring perception stream for entity detection...
 ```"""
     boot_synthesis = """```bash
-omnisearch@agent:~$ tail -f /var/log/executive_synthesis.md
+omnisearch@agent:~$ tail -f /var/log/EXECUTIVE_REPORT.md
 [REPORT_GEN] Executive synthesis pipeline online.
 [STATUS] Awaiting visual inspection & web verification...
 ```"""
@@ -151,6 +156,7 @@ omnisearch@agent:~$ tail -f /var/log/executive_synthesis.md
         [],
         boot_reasoning,
         boot_web,
+        boot_synthesis,
         boot_synthesis
     )
 
@@ -166,6 +172,9 @@ omnisearch@agent:~$ tail -f /var/log/executive_synthesis.md
         progress = state.get("progress", 50)
         status_text = state["status"]
         event_logs = state.get("event_logs", [])
+
+        if stage == "COMPLETE":
+            status_text = "✅ MISSION ACCOMPLISHED: 📑 Executive Report ready in Terminal 03 & 'Full Report View' tab below!"
 
         hud_html = format_hud_stepper(stage, progress, status_text)
         logs_md = format_event_logs(event_logs)
@@ -183,34 +192,33 @@ omnisearch@agent:~$ tail -f /var/log/executive_synthesis.md
             gallery,
             thinking_md,
             web_md,
-            final_answer
+            final_answer,        # Terminal 03 (Parallel View)
+            final_answer         # Full Report View (Dedicated Tab)
         )
 
-# Modern Cyber/Terminal CSS that fits completely in a single window with Dynamic Stepper HUD
+# Modern Cyber/Terminal CSS that fits gracefully in window and supports responsive scrolling
 custom_css = """
-/* GLOBAL RESET & VIEWPORT LOCK */
+/* GLOBAL RESET */
 * {
     box-sizing: border-box !important;
 }
 html, body {
-    height: 100vh !important;
-    max-height: 100vh !important;
-    overflow: hidden !important;
+    min-height: 100vh !important;
     margin: 0 !important;
     padding: 0 !important;
     background-color: #06090f !important;
     color: #c9d1d9 !important;
     font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, Menlo, Consolas, monospace !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
 }
 
-/* GRADIO CONTAINER LOCK */
+/* GRADIO CONTAINER */
 .gradio-container {
     max-width: 100% !important;
     width: 100% !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
-    padding: 5px 10px !important;
-    overflow: hidden !important;
+    min-height: 100vh !important;
+    padding: 5px 12px !important;
     display: flex !important;
     flex-direction: column !important;
     background-color: #06090f !important;
@@ -300,12 +308,10 @@ html, body {
     letter-spacing: 0.05em;
 }
 
-/* MAIN COCKPIT ROW (Fills remaining screen height) */
+/* MAIN COCKPIT ROW */
 .main-cockpit-row {
     flex: 1 1 auto !important;
-    height: calc(100vh - 48px) !important;
-    max-height: calc(100vh - 48px) !important;
-    overflow: hidden !important;
+    min-height: calc(100vh - 52px) !important;
     display: flex !important;
     gap: 8px !important;
     margin: 0 !important;
@@ -313,9 +319,6 @@ html, body {
 
 /* LEFT COLUMN: CONTROL CONSOLE */
 .control-console-col {
-    height: 100% !important;
-    max-height: 100% !important;
-    overflow-y: auto !important;
     background: #090e17 !important;
     border: 1px solid #182232 !important;
     border-radius: 6px !important;
@@ -334,13 +337,11 @@ html, body {
 
 /* RIGHT COLUMN: DISPLAY MATRIX */
 .display-matrix-col {
-    height: 100% !important;
-    max-height: 100% !important;
-    overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
     gap: 5px !important;
     flex: 1 1 auto !important;
+    min-height: 0 !important;
 }
 
 /* DYNAMIC STEPPER & HUD BOX */
@@ -403,6 +404,16 @@ html, body {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+.hud-report-alert {
+    background: rgba(0, 255, 157, 0.15);
+    color: #00ff9d;
+    border: 1px solid #00ff9d;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    animation: pulse 1.5s infinite;
 }
 .hud-ascii-bar {
     font-size: 0.7rem;
@@ -476,19 +487,19 @@ html, body {
 }
 .panel-header-badge {
     font-size: 0.62rem;
-    padding: 1px 4px;
+    padding: 1px 5px;
     border-radius: 3px;
     font-weight: 700;
 }
 .badge-reasoning { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
 .badge-web { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
-.badge-synthesis { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+.badge-synthesis { background: #00ff9d; color: #06090f; font-weight: 900; }
 
 /* UPPER ROW: OPTICAL VIEWPORTS */
 .optical-viewports-row {
     flex: 0 0 auto !important;
     height: 215px !important;
-    max-height: 215px !important;
+    min-height: 215px !important;
     overflow: hidden !important;
     display: flex !important;
     gap: 6px !important;
@@ -496,7 +507,6 @@ html, body {
 }
 .viewport-card {
     height: 100% !important;
-    max-height: 100% !important;
     background: #090e17 !important;
     border: 1px solid #182232 !important;
     border-radius: 6px !important;
@@ -507,24 +517,28 @@ html, body {
 .viewport-card .viewport-content {
     flex: 1 1 auto !important;
     height: 193px !important;
-    max-height: 193px !important;
     overflow: hidden !important;
     background: #06090f !important;
+}
+
+/* LOWER DECK: TABS CONTAINER */
+.cockpit-deck-tabs {
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 240px !important;
 }
 
 /* LOWER ROW: 3 PARALLEL TERMINALS */
 .terminals-matrix-row {
     flex: 1 1 auto !important;
-    height: calc(100% - 275px) !important;
-    min-height: 180px !important;
-    overflow: hidden !important;
+    min-height: 230px !important;
     display: flex !important;
     gap: 6px !important;
     margin: 0 !important;
 }
 .cockpit-terminal-card {
-    height: 100% !important;
-    max-height: 100% !important;
+    min-height: 220px !important;
     background: #090e17 !important;
     border: 1px solid #182232 !important;
     border-radius: 6px !important;
@@ -532,13 +546,17 @@ html, body {
     display: flex !important;
     flex-direction: column !important;
 }
+.cockpit-terminal-card-report {
+    border: 1.5px solid rgba(0, 255, 157, 0.5) !important;
+    box-shadow: 0 0 15px rgba(0, 255, 157, 0.15) !important;
+}
 .cockpit-terminal-body {
     flex: 1 1 auto !important;
-    height: calc(100% - 22px) !important;
+    height: 210px !important;
     overflow-y: auto !important;
     padding: 6px 8px !important;
     font-size: 0.76rem !important;
-    line-height: 1.4 !important;
+    line-height: 1.45 !important;
     color: #cbd5e1 !important;
     background: #06090f !important;
 }
@@ -548,6 +566,35 @@ html, body {
 .cockpit-terminal-body::-webkit-scrollbar-thumb {
     background: #1e293b;
     border-radius: 2px;
+}
+
+/* FULL REPORT TAB STYLING */
+.full-report-container {
+    background: #090e17 !important;
+    border: 1.5px solid rgba(0, 255, 157, 0.5) !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 230px !important;
+    box-shadow: 0 0 18px rgba(0, 255, 157, 0.15) !important;
+}
+.full-report-body {
+    flex: 1 1 auto !important;
+    height: 210px !important;
+    overflow-y: auto !important;
+    padding: 12px 18px !important;
+    font-size: 0.84rem !important;
+    line-height: 1.6 !important;
+    color: #f1f5f9 !important;
+    background: #06090f !important;
+}
+.full-report-body::-webkit-scrollbar {
+    width: 5px;
+}
+.full-report-body::-webkit-scrollbar-thumb {
+    background: #00ff9d;
+    border-radius: 3px;
 }
 
 /* LIVE EVENT LOG WIDGET IN LEFT COLUMN */
@@ -576,21 +623,21 @@ html, body {
 }
 
 /* TERMINAL TEXT FORMATTING */
-.cockpit-terminal-body pre, .cockpit-terminal-body code, .event-logger-body pre, .event-logger-body code {
+.cockpit-terminal-body pre, .cockpit-terminal-body code, .event-logger-body pre, .event-logger-body code, .full-report-body pre, .full-report-body code {
     background: #0d131f !important;
     border: 1px solid #1c2738 !important;
     color: #38bdf8 !important;
     border-radius: 3px !important;
     font-size: 0.72rem !important;
 }
-.cockpit-terminal-body a {
+.cockpit-terminal-body a, .full-report-body a {
     color: #38bdf8 !important;
     text-decoration: underline !important;
 }
-.cockpit-terminal-body strong {
+.cockpit-terminal-body strong, .full-report-body strong {
     color: #f1f5f9 !important;
 }
-.cockpit-terminal-body blockquote {
+.cockpit-terminal-body blockquote, .full-report-body blockquote {
     border-left: 2px solid #00f0ff !important;
     margin: 3px 0 !important;
     padding: 1px 6px !important;
@@ -661,7 +708,7 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
     </div>
     """)
 
-    # 2. Main Full-Window Row
+    # 2. Main Cockpit Row
     with gr.Row(elem_classes=["main-cockpit-row"]):
         # Left: Control Console & Live Event Logger
         with gr.Column(scale=3, min_width=280, elem_classes=["control-console-col"]):
@@ -763,7 +810,7 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
                     inputs=[image_input, query_input, max_turns_slider, auto_web_checkbox, model_selector]
                 )
 
-        # Right: Display Matrix (Upper Viewports + Lower Terminals)
+        # Right: Display Matrix (Upper Viewports + Lower Terminals & Full Report)
         with gr.Column(scale=9, elem_classes=["display-matrix-col"]):
             # Dynamic Stepper & HUD Box
             hud_stepper_output = gr.HTML(
@@ -816,73 +863,101 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
                         elem_classes=["viewport-content"]
                     )
 
-            # Lower Row: 3 Parallel Side-by-Side Terminals
-            with gr.Row(elem_classes=["terminals-matrix-row"]):
-                # Terminal 1: Deep Reasoning Trace (<think>)
-                with gr.Column(scale=1, min_width=220, elem_classes=["cockpit-terminal-card"]):
-                    gr.HTML("""
-                    <div class="panel-header-bar">
-                        <div class="terminal-dots">
-                            <span class="terminal-dot dot-red"></span>
-                            <span class="terminal-dot dot-yellow"></span>
-                            <span class="terminal-dot dot-green"></span>
-                        </div>
-                        <span class="panel-header-title">TERMINAL 01 // REASONING_TRACE</span>
-                        <span class="panel-header-badge badge-reasoning">&lt;THINK&gt;</span>
-                    </div>
-                    """)
-                    thinking_output = gr.Markdown(
-                        """```bash
+            # Lower Row: Tabs for Parallel Cockpit vs. Full Report View
+            with gr.Tabs(elem_classes=["cockpit-deck-tabs"]):
+                with gr.Tab("⊞ PARALLEL COCKPIT (Reasoning + Web + Report Side-by-Side)"):
+                    with gr.Row(elem_classes=["terminals-matrix-row"]):
+                        # Terminal 1: Deep Reasoning Trace (<think>)
+                        with gr.Column(scale=3, min_width=210, elem_classes=["cockpit-terminal-card"]):
+                            gr.HTML("""
+                            <div class="panel-header-bar">
+                                <div class="terminal-dots">
+                                    <span class="terminal-dot dot-red"></span>
+                                    <span class="terminal-dot dot-yellow"></span>
+                                    <span class="terminal-dot dot-green"></span>
+                                </div>
+                                <span class="panel-header-title">TERMINAL 01 // REASONING</span>
+                                <span class="panel-header-badge badge-reasoning">&lt;THINK&gt;</span>
+                            </div>
+                            """)
+                            thinking_output = gr.Markdown(
+                                """```bash
 omnisearch@agent:~$ cat /proc/reasoning_stream
 [SYS_INIT] Qwen2.5-VL CoT daemon active.
 [STATUS] Awaiting visual input & objective...
 ```""",
-                        elem_classes=["cockpit-terminal-body"]
-                    )
+                                elem_classes=["cockpit-terminal-body"]
+                            )
 
-                # Terminal 2: Live Web Sources (Active RAG)
-                with gr.Column(scale=1, min_width=220, elem_classes=["cockpit-terminal-card"]):
-                    gr.HTML("""
-                    <div class="panel-header-bar">
-                        <div class="terminal-dots">
-                            <span class="terminal-dot dot-red"></span>
-                            <span class="terminal-dot dot-yellow"></span>
-                            <span class="terminal-dot dot-green"></span>
-                        </div>
-                        <span class="panel-header-title">TERMINAL 02 // LIVE_WEB_INTEL</span>
-                        <span class="panel-header-badge badge-web">ACTIVE_RAG</span>
-                    </div>
-                    """)
-                    web_output = gr.Markdown(
-                        """```bash
+                        # Terminal 2: Live Web Sources (Active RAG)
+                        with gr.Column(scale=3, min_width=210, elem_classes=["cockpit-terminal-card"]):
+                            gr.HTML("""
+                            <div class="panel-header-bar">
+                                <div class="terminal-dots">
+                                    <span class="terminal-dot dot-red"></span>
+                                    <span class="terminal-dot dot-yellow"></span>
+                                    <span class="terminal-dot dot-green"></span>
+                                </div>
+                                <span class="panel-header-title">TERMINAL 02 // WEB_INTEL</span>
+                                <span class="panel-header-badge badge-web">ACTIVE_RAG</span>
+                            </div>
+                            """)
+                            web_output = gr.Markdown(
+                                """```bash
 omnisearch@agent:~$ netstat --active-rag --monitor
 [DAEMON] DuckDuckGo & Wikipedia bridge online.
 [STATUS] Standby: monitoring visual stream...
 ```""",
-                        elem_classes=["cockpit-terminal-body"]
-                    )
+                                elem_classes=["cockpit-terminal-body"]
+                            )
 
-                # Terminal 3: Final Synthesis
-                with gr.Column(scale=1, min_width=220, elem_classes=["cockpit-terminal-card"]):
-                    gr.HTML("""
-                    <div class="panel-header-bar">
-                        <div class="terminal-dots">
-                            <span class="terminal-dot dot-red"></span>
-                            <span class="terminal-dot dot-yellow"></span>
-                            <span class="terminal-dot dot-green"></span>
-                        </div>
-                        <span class="panel-header-title">TERMINAL 03 // FINAL_SYNTHESIS</span>
-                        <span class="panel-header-badge badge-synthesis">REPORT</span>
-                    </div>
-                    """)
-                    answer_output = gr.Markdown(
-                        """```bash
-omnisearch@agent:~$ tail -f /var/log/synthesis.md
-[REPORT_GEN] Synthesis pipeline online.
+                        # Terminal 3: Final Executive Synthesis Report (Glowing Emerald Border & Badge)
+                        with gr.Column(scale=4, min_width=240, elem_classes=["cockpit-terminal-card", "cockpit-terminal-card-report"]):
+                            gr.HTML("""
+                            <div class="panel-header-bar" style="background:#091b15; border-bottom: 1px solid #00ff9d;">
+                                <div class="terminal-dots">
+                                    <span class="terminal-dot dot-red"></span>
+                                    <span class="terminal-dot dot-yellow"></span>
+                                    <span class="terminal-dot dot-green"></span>
+                                </div>
+                                <span class="panel-header-title" style="color:#00ff9d; font-weight:800;">TERMINAL 03 // FINAL_REPORT</span>
+                                <span class="panel-header-badge badge-synthesis">★ REPORT</span>
+                            </div>
+                            """)
+                            answer_output = gr.Markdown(
+                                """```bash
+omnisearch@agent:~$ cat /var/out/EXECUTIVE_REPORT.md
+╔═══════════════════════════════════════════════════════╗
+║  📑 EXECUTIVE MISSION SYNTHESIS & FINDINGS REPORT     ║
+╚═══════════════════════════════════════════════════════╝
 [STATUS] Waiting for inspection & verification...
 ```""",
-                        elem_classes=["cockpit-terminal-body"]
-                    )
+                                elem_classes=["cockpit-terminal-body"]
+                            )
+
+                with gr.Tab("📑 FULL REPORT VIEW (Executive Summary & Findings)"):
+                    with gr.Group(elem_classes=["full-report-container"]):
+                        gr.HTML("""
+                        <div class="panel-header-bar" style="background:#091b15; border-bottom: 1px solid #00ff9d;">
+                            <div class="terminal-dots">
+                                <span class="terminal-dot dot-red"></span>
+                                <span class="terminal-dot dot-yellow"></span>
+                                <span class="terminal-dot dot-green"></span>
+                            </div>
+                            <span class="panel-header-title" style="color:#00ff9d; font-weight:800;">EXECUTIVE_REPORT // VERIFIED_FINDINGS_DECK</span>
+                            <span class="panel-header-badge badge-synthesis">★ FULL REPORT VIEW</span>
+                        </div>
+                        """)
+                        full_report_output = gr.Markdown(
+                            """```bash
+omnisearch@agent:~$ cat /var/out/EXECUTIVE_REPORT.md
+╔═══════════════════════════════════════════════════════╗
+║  🎯 EXECUTIVE MISSION SYNTHESIS & FINDINGS REPORT     ║
+╚═══════════════════════════════════════════════════════╝
+[STATUS] Waiting for visual perception & web verification...
+```""",
+                            elem_classes=["full-report-body"]
+                        )
 
     # Quick prompt button click events
     p1_btn.click(
@@ -919,7 +994,8 @@ omnisearch@agent:~$ tail -f /var/log/synthesis.md
             crops_gallery,
             thinking_output,
             web_output,
-            answer_output
+            answer_output,
+            full_report_output
         ]
     )
 
