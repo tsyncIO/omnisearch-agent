@@ -8,7 +8,7 @@ from transformers import (
     AutoProcessor,
     BitsAndBytesConfig
 )
-from tools.visual_tools import parse_grounding_tag, crop_image, draw_bounding_boxes
+from tools.visual_tools import parse_grounding_tags, parse_grounding_tag, crop_image, draw_bounding_boxes
 from tools.web_tools import parse_web_search_tag, search_web_ddg, format_search_results_markdown
 from .prompts import AGENT_SYSTEM_PROMPT, NEXT_TURN_PROMPT_CROP, NEXT_TURN_PROMPT_WEB
 
@@ -164,6 +164,31 @@ class OmniSearchVisualAgent:
             # Append assistant response to chat history
             messages.append({"role": "assistant", "content": response_text})
 
+            # Parse visual tool calls (<grounding>) if present
+            grounding_list = parse_grounding_tags(response_text)
+            for g_item in grounding_list:
+                bbox = g_item["bbox_2d"]
+                source = g_item.get("source", "original_image")
+
+                # Resolve source image
+                src_img = original_image
+                if source.startswith("observation_"):
+                    try:
+                        obs_idx = int(source.split("_")[-1])
+                        if obs_idx < len(observations):
+                            src_img = observations[obs_idx]
+                    except Exception:
+                        src_img = original_image
+
+                # Execute crop tool
+                cropped_patch = crop_image(src_img, bbox)
+                observations.append(cropped_patch)
+                box_records.append({
+                    "bbox": bbox,
+                    "label": f"Focus {len(box_records) + 1}"
+                })
+                crop_gallery.append((cropped_patch, f"Region {len(box_records)}"))
+
             # Check if final answer is provided
             if "<answer>" in response_text:
                 answer_match = re.search(r"<answer>(.*?)</answer>", response_text, re.DOTALL)
@@ -187,37 +212,10 @@ class OmniSearchVisualAgent:
                 }
                 return
 
-            # Check for visual tool call (<grounding>)
-            grounding_data = parse_grounding_tag(response_text)
-            if grounding_data:
-                bbox = grounding_data["bbox_2d"]
-                source = grounding_data["source"]
-
-                # Resolve source image
-                src_img = original_image
-                if source.startswith("observation_"):
-                    try:
-                        obs_idx = int(source.split("_")[-1])
-                        if obs_idx < len(observations):
-                            src_img = observations[obs_idx]
-                    except Exception:
-                        src_img = original_image
-
-                # Execute crop tool
-                cropped_patch = crop_image(src_img, bbox, relative=True)
-                observations.append(cropped_patch)
-                crop_label = f"Turn {turn + 1} Inspection (from {source})"
-                crop_gallery.append((cropped_patch, crop_label))
-
-                # Add bounding box to canvas
-                box_records.append({
-                    "bbox": bbox,
-                    "label": f"Turn {turn + 1} Focus"
-                })
-
+            if grounding_list:
                 # Yield updated view with crop
                 yield {
-                    "status": f"Turn {turn + 1}: Cropped region [{bbox[0]:.2f}, {bbox[1]:.2f}, {bbox[2]:.2f}, {bbox[3]:.2f}]. Feeding back into reasoning...",
+                    "status": f"Turn {turn + 1}: Inspected {len(grounding_list)} regions. Feeding back into reasoning...",
                     "annotated_image": draw_bounding_boxes(original_image, box_records),
                     "crop_gallery": crop_gallery,
                     "thinking_text": full_thinking_log,
@@ -226,6 +224,7 @@ class OmniSearchVisualAgent:
                 }
 
                 # Feed observation back to conversation
+                last_crop = observations[-1]
                 obs_prompt = NEXT_TURN_PROMPT_CROP.format(
                     turn_idx=turn + 1,
                     obs_idx=len(observations) - 1,
@@ -235,7 +234,7 @@ class OmniSearchVisualAgent:
                     "role": "user",
                     "content": [
                         {"type": "text", "text": obs_prompt},
-                        {"type": "image", "image": cropped_patch}
+                        {"type": "image", "image": last_crop}
                     ]
                 })
                 continue

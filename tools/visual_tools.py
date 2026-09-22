@@ -2,39 +2,58 @@ import re
 from typing import Tuple, List, Optional, Dict
 from PIL import Image, ImageDraw, ImageFont
 
-def parse_grounding_tag(text: str) -> Optional[Dict]:
+def parse_grounding_tags(text: str) -> List[Dict]:
     """
-    Parses <grounding>{"bbox_2d": [x0, y0, x1, y1], "source": "original_image"}</grounding>
-    from model response.
+    Parses all <grounding>{"bbox_2d": [...], "source": "..."} tags from model output.
+    Supports both single and multiple tags per turn.
     """
-    pattern = r'<grounding>\{"bbox_2d":\s*(\[[^\]]+\]),\s*"source":\s*["\']([^"\']+)["\']\}</grounding>'
-    match = re.search(pattern, text, re.DOTALL)
-    if not match:
-        # Fallback looser regex in case whitespace or quoting varies
-        pattern_loose = r'<grounding>.*?bbox_2d.*?(\[[0-9\.,\s]+\]).*?source.*?["\']([^"\']+)["\'].*?</grounding>'
-        match = re.search(pattern_loose, text, re.DOTALL)
-    
-    if match:
+    results = []
+    pattern = r'<grounding>\{"bbox_2d":\s*(\[[^\]]+\])(?:,\s*"source":\s*["\']([^"\']+)["\'])?'
+    matches = re.finditer(pattern, text)
+    for m in matches:
         try:
-            bbox = eval(match.group(1).strip())
-            source = match.group(2).strip()
+            bbox = eval(m.group(1).strip())
+            source = m.group(2).strip() if m.group(2) else "original_image"
             if isinstance(bbox, list) and len(bbox) == 4:
-                return {"bbox_2d": bbox, "source": source}
+                results.append({"bbox_2d": bbox, "source": source})
         except Exception:
-            pass
-    return None
+            continue
+
+    # Fallback to single match if regex was slightly off
+    if not results:
+        pattern_loose = r'<grounding>.*?bbox_2d.*?(\[[0-9\.,\s]+\])'
+        matches_loose = re.finditer(pattern_loose, text)
+        for ml in matches_loose:
+            try:
+                bbox = eval(ml.group(1).strip())
+                if isinstance(bbox, list) and len(bbox) == 4:
+                    results.append({"bbox_2d": bbox, "source": "original_image"})
+            except Exception:
+                continue
+
+    return results
+
+def parse_grounding_tag(text: str) -> Optional[Dict]:
+    tags = parse_grounding_tags(text)
+    return tags[0] if tags else None
 
 def crop_image(
     image: Image.Image,
     bbox: List[float],
-    relative: bool = True,
+    relative: Optional[bool] = None,
     resize_multiplier: float = 2.0,
     min_dim: int = 56
 ) -> Image.Image:
     """
     Crops an image given [x0, y0, x1, y1] coordinates and applies high-quality Lanczos resampling.
+    Automatically detects if coordinates are relative (0-1) or absolute pixels.
     """
     w, h = image.size
+    
+    # Auto-detect relative vs absolute
+    if relative is None:
+        relative = max(bbox) <= 1.0
+
     if relative:
         x0, y0, x1, y1 = bbox[0] * w, bbox[1] * h, bbox[2] * w, bbox[3] * h
     else:
@@ -82,7 +101,11 @@ def draw_bounding_boxes(
         color = record.get("color", colors[idx % len(colors)])
         label = record.get("label", f"Turn {idx + 1}")
 
-        x0, y0, x1, y1 = bbox[0] * w, bbox[1] * h, bbox[2] * w, bbox[3] * h
+        is_rel = max(bbox) <= 1.0
+        if is_rel:
+            x0, y0, x1, y1 = bbox[0] * w, bbox[1] * h, bbox[2] * w, bbox[3] * h
+        else:
+            x0, y0, x1, y1 = bbox
         left, top = max(0, int(min(x0, x1))), max(0, int(min(y0, y1)))
         right, bottom = min(w, int(max(x0, x1))), min(h, int(max(y0, y1)))
 
