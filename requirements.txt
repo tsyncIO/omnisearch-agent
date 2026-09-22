@@ -1,0 +1,8 @@
+torch>=2.4.0
+transformers>=4.49.0
+accelerate>=1.0.0
+bitsandbytes>=0.44.0
+gradio>=5.0.0
+duckduckgo_search>=7.0.0
+pillow>=10.0.0
+qwen-vl-utils>=0.0.8
