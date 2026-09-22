@@ -118,7 +118,11 @@ with gr.Blocks(title="OmniSearch Agent") as demo:
 
             with gr.Accordion("⚙️ Agent Settings", open=False):
                 model_selector = gr.Dropdown(
-                    choices=["Mini-o3/Mini-o3-7B-v1", "Qwen/Qwen2.5-VL-7B-Instruct"],
+                    choices=[
+                        "Mini-o3/Mini-o3-7B-v1",
+                        "Qwen/Qwen2.5-VL-7B-Instruct",
+                        "Qwen/Qwen2.5-VL-3B-Instruct"
+                    ],
                     value="Mini-o3/Mini-o3-7B-v1",
                     label="Backbone Model"
                 )
@@ -128,6 +132,19 @@ with gr.Blocks(title="OmniSearch Agent") as demo:
             with gr.Row():
                 submit_btn = gr.Button("🔍 Run Autonomous Search", variant="primary", scale=2)
                 clear_btn = gr.ClearButton([image_input, query_input], value="Clear", scale=1)
+
+            gr.Examples(
+                examples=[
+                    [
+                        "sample_images/fig_demo_crop.jpg",
+                        "Identify the key objects in this scene, zoom in on subtle details, and look up real-time information about them.",
+                        3,
+                        True,
+                        "Mini-o3/Mini-o3-7B-v1"
+                    ]
+                ],
+                inputs=[image_input, query_input, max_turns_slider, auto_web_checkbox, model_selector]
+            )
 
             gr.Markdown("""
             ---

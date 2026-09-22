@@ -23,7 +23,10 @@ def search_web_ddg(query: str, max_results: int = 4) -> List[Dict]:
     Returns list of dicts with 'title', 'href', 'body'.
     """
     try:
-        from duckduckgo_search import DDGS
+        try:
+            from ddgs import DDGS
+        except ImportError:
+            from duckduckgo_search import DDGS
         ddgs = DDGS()
         results = list(ddgs.text(query, max_results=max_results))
         formatted = []
