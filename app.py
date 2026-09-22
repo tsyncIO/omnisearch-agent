@@ -136,11 +136,18 @@ with gr.Blocks(title="OmniSearch Agent") as demo:
             gr.Examples(
                 examples=[
                     [
-                        "sample_images/fig_demo_crop.jpg",
-                        "Identify the key objects in this scene, zoom in on subtle details, and look up real-time information about them.",
+                        "sample_images/test.jpg",
+                        "Identify each waste bin by its color and German label, read the city name mentioned on the bins, and search the web to explain the waste separation system used here.",
                         3,
                         True,
-                        "Mini-o3/Mini-o3-7B-v1"
+                        "Qwen/Qwen2.5-VL-3B-Instruct"
+                    ],
+                    [
+                        "sample_images/fig_demo_crop.jpg",
+                        "Identify the brand and text in this image, zoom in if needed, and search the web to explain what kind of venue or company this is.",
+                        3,
+                        True,
+                        "Qwen/Qwen2.5-VL-3B-Instruct"
                     ]
                 ],
                 inputs=[image_input, query_input, max_turns_slider, auto_web_checkbox, model_selector]
