@@ -1,3 +1,4 @@
+import os
 import re
 from typing import Tuple, List, Optional, Dict
 from PIL import Image, ImageDraw, ImageFont
@@ -109,22 +110,37 @@ def draw_bounding_boxes(
         left, top = max(0, int(min(x0, x1))), max(0, int(min(y0, y1)))
         right, bottom = min(w, int(max(x0, x1))), min(h, int(max(y0, y1)))
 
+        # Scalable font sizing
+        font_size = max(16, int(min(w, h) * 0.032))
+        font = None
+        for font_path in [
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+            "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf"
+        ]:
+            if os.path.exists(font_path):
+                try:
+                    font = ImageFont.truetype(font_path, size=font_size)
+                    break
+                except Exception:
+                    pass
+        if font is None:
+            font = ImageFont.load_default()
+
         # Draw thick rectangle
-        line_width = max(3, int(min(w, h) * 0.005))
+        line_width = max(4, int(min(w, h) * 0.006))
         draw.rectangle([left, top, right, bottom], outline=color, width=line_width)
 
-        # Draw label background tag
+        # Label tag positioning
         label_text = f" {label} "
-        font = None
-        try:
-            # Try to load default or truetype font if available
-            font = ImageFont.load_default()
-        except Exception:
-            pass
-        
-        # Estimate text bbox
-        text_bbox = draw.textbbox((left, max(0, top - 20)), label_text, font=font)
-        draw.rectangle(text_bbox, fill=color)
-        draw.text((left, max(0, top - 20)), label_text, fill="black", font=font)
+        tag_y = top - font_size - 6
+        if tag_y < 0:
+            tag_y = top + line_width + 2
+
+        text_bbox = draw.textbbox((left, tag_y), label_text, font=font)
+        # Pad background tag
+        pad_bbox = (text_bbox[0] - 2, text_bbox[1] - 2, text_bbox[2] + 2, text_bbox[3] + 2)
+        draw.rectangle(pad_bbox, fill=color)
+        draw.text((left, tag_y), label_text, fill="black", font=font)
 
     return canvas
