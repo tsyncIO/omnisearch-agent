@@ -33,10 +33,10 @@ def format_hud_stepper(stage: str, progress: int, status_text: str) -> str:
     for i, (st_key, st_label) in enumerate(stages_def):
         if i < current_idx or stage == "COMPLETE":
             cls = "step-chip done"
-            lbl = f"✔ {st_label}"
+            lbl = f"[OK] {st_label}"
         elif i == current_idx:
             cls = "step-chip active"
-            lbl = f"⚡ {st_label}"
+            lbl = f"[RUN] {st_label}"
         else:
             cls = "step-chip pending"
             lbl = st_label
@@ -44,7 +44,7 @@ def format_hud_stepper(stage: str, progress: int, status_text: str) -> str:
         chips_html += f'<span class="{cls}">{lbl}</span>'
         if i < len(stages_def) - 1:
             conn_cls = "conn-done" if (i < current_idx or stage == "COMPLETE") else "conn-pending"
-            chips_html += f'<span class="step-connector {conn_cls}">▸</span>'
+            chips_html += f'<span class="step-connector {conn_cls}">&gt;</span>'
 
     filled = int(progress / 5)
     empty = 20 - filled
@@ -52,7 +52,7 @@ def format_hud_stepper(stage: str, progress: int, status_text: str) -> str:
 
     report_banner = ""
     if stage == "COMPLETE":
-        report_banner = '<span class="hud-report-alert">📑 [REPORT READY BELOW]</span>'
+        report_banner = '<span class="hud-report-alert">[REPORT READY]</span>'
 
     return f"""
     <div class="hud-stepper-box">
@@ -70,7 +70,7 @@ def format_hud_stepper(stage: str, progress: int, status_text: str) -> str:
             </div>
         </div>
         <div class="hud-status-line">
-            <span class="hud-activity-label">⚡ [{stage}]:</span>
+            <span class="hud-activity-label">[{stage}]:</span>
             <span class="hud-activity-text">{status_text}</span>
         </div>
     </div>
@@ -79,8 +79,8 @@ def format_hud_stepper(stage: str, progress: int, status_text: str) -> str:
 def format_event_logs(logs: List[str]) -> str:
     if not logs:
         return """```bash
-[00.00s] 🟢 [STANDBY] Event logger daemon active.
-[00.00s] 💡 [READY] Select an example or upload an image and click [EXECUTE].
+[00.00s] [INF] [STANDBY] Event logger daemon active.
+[00.00s] [INF] [READY] Select an example or upload an image and click [EXECUTE].
 ```"""
     recent = logs[-14:]
     return "```bash\n" + "\n".join(recent) + "\n```"
@@ -93,10 +93,10 @@ def run_agent_interface(
     model_choice: str
 ):
     if input_image is None:
-        init_hud = format_hud_stepper("INIT", 0, "⚠️ [ALERT]: Please drop an image or select a test case.")
+        init_hud = format_hud_stepper("INIT", 0, "[ALERT]: Please drop an image or select a test case.")
         init_logs = """```bash
-[00.00s] ⚠️ [ALERT] No optical feed detected.
-[00.00s] 💡 [STANDBY] Awaiting image upload...
+[00.00s] [WRN] [ALERT] No optical feed detected.
+[00.00s] [INF] [STANDBY] Awaiting image upload...
 ```"""
         init_term_reasoning = """```bash
 omnisearch@agent:~$ cat /proc/reasoning_stream
@@ -109,9 +109,9 @@ omnisearch@agent:~$ netstat --active-rag --monitor
 ```"""
         init_term_synthesis = """```bash
 omnisearch@agent:~$ cat /var/out/EXECUTIVE_REPORT.md
-╔═══════════════════════════════════════════════════════╗
-║  📑 EXECUTIVE MISSION SYNTHESIS & FINDINGS REPORT     ║
-╚═══════════════════════════════════════════════════════╝
++-------------------------------------------------------+
+|  EXECUTIVE MISSION SYNTHESIS & FINDINGS REPORT        |
++-------------------------------------------------------+
 [STATUS] Idle. Waiting for visual perception & web grounding...
 ```"""
         yield (
@@ -131,9 +131,9 @@ omnisearch@agent:~$ cat /var/out/EXECUTIVE_REPORT.md
 
     boot_hud = format_hud_stepper("INIT", 12, "Loading neural weights into RTX A4000 VRAM...")
     boot_logs = """```bash
-[00.00s] 🚀 [START] Ingested optical stream.
-[00.15s] ⚡ [GPU_ALLOC] Allocated 8.5 GB VRAM on NVIDIA RTX A4000 (NF4).
-[00.30s] 🧠 [VLM_LOAD] Compiling Qwen2.5-VL vision-language encoder...
+[00.00s] [INF] [START] Ingested optical stream.
+[00.15s] [INF] [GPU_ALLOC] Allocated 8.5 GB VRAM on NVIDIA RTX A4000 (NF4).
+[00.30s] [INF] [VLM_LOAD] Compiling Qwen2.5-VL vision-language encoder...
 ```"""
     boot_reasoning = """```bash
 omnisearch@agent:~$ cat /proc/reasoning_stream
@@ -148,9 +148,9 @@ omnisearch@agent:~$ netstat --active-rag --monitor
 ```"""
     boot_synthesis = """```bash
 omnisearch@agent:~$ tail -f /var/log/EXECUTIVE_REPORT.md
-╔═══════════════════════════════════════════════════════╗
-║  📑 EXECUTIVE MISSION SYNTHESIS & FINDINGS REPORT     ║
-╚═══════════════════════════════════════════════════════╝
++-------------------------------------------------------+
+|  EXECUTIVE MISSION SYNTHESIS & FINDINGS REPORT        |
++-------------------------------------------------------+
 [STATUS] Awaiting visual inspection & web verification...
 ```"""
 
@@ -179,7 +179,7 @@ omnisearch@agent:~$ tail -f /var/log/EXECUTIVE_REPORT.md
         event_logs = state.get("event_logs", [])
 
         if stage == "COMPLETE":
-            status_text = "✅ MISSION ACCOMPLISHED: 📑 Executive Report ready in Terminal 03 & 'Full Report View' tab below!"
+            status_text = "Mission complete. Executive report ready in Terminal 03 and Report view."
 
         hud_html = format_hud_stepper(stage, progress, status_text)
         logs_md = format_event_logs(event_logs)
@@ -919,10 +919,10 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
             <span class="terminal-version-tag">v2.5 // CYBER-COCKPIT</span>
         </div>
         <div class="terminal-nav-center">
-            <span class="telemetry-item">⚡ HOST: <span class="telemetry-val">local-linux</span></span>
-            <span class="telemetry-item">🎮 GPU: <span class="telemetry-val">RTX A4000 16GB (NF4)</span></span>
-            <span class="telemetry-item">🧠 CORE: <span class="telemetry-val">Mini-o3 / Qwen2.5-VL</span></span>
-            <span class="telemetry-item">🌐 RAG: <span class="telemetry-val">DDG + Wiki [ONLINE]</span></span>
+            <span class="telemetry-item">HOST: <span class="telemetry-val">local-linux</span></span>
+            <span class="telemetry-item">GPU: <span class="telemetry-val">RTX A4000 16GB (NF4)</span></span>
+            <span class="telemetry-item">CORE: <span class="telemetry-val">Mini-o3 / Qwen2.5-VL</span></span>
+            <span class="telemetry-item">RAG: <span class="telemetry-val">DDG + Wiki [ONLINE]</span></span>
         </div>
         <div class="terminal-nav-right">
             <span class="status-live-dot"></span>
@@ -944,21 +944,21 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
 
             image_input = gr.Image(
                 type="pil",
-                label="📸 Optical Stream Input",
+                label="Optical Stream Input",
                 sources=["upload", "clipboard"],
                 height=120
             )
 
             query_input = gr.Textbox(
-                label="💬 Mission Objective Prompt",
+                label="Mission Objective Prompt",
                 placeholder="$ Enter autonomous visual objective or question...",
                 lines=2,
                 max_lines=2
             )
 
             with gr.Row(elem_classes=["action-btn-row"]):
-                submit_btn = gr.Button("⚡ [ EXECUTE MISSION ]", variant="primary", scale=3, elem_classes=["term-btn-primary"])
-                clear_btn = gr.ClearButton([image_input, query_input], value="↺ Reset", scale=1, elem_classes=["term-btn-secondary"])
+                submit_btn = gr.Button("[ EXECUTE MISSION ]", variant="primary", scale=3, elem_classes=["term-btn-primary"])
+                clear_btn = gr.ClearButton([image_input, query_input], value="Reset", scale=1, elem_classes=["term-btn-secondary"])
 
             # Live Event Logger Widget
             with gr.Group(elem_classes=["event-logger-box"]):
@@ -979,7 +979,7 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
                 )
 
             # Settings Accordion
-            with gr.Accordion("⚙️ Engine Parameters", open=False, elem_classes=["sidebar-accordion"]):
+            with gr.Accordion("Engine Parameters", open=False, elem_classes=["sidebar-accordion"]):
                 model_selector = gr.Dropdown(
                     choices=[
                         "Qwen/Qwen2.5-VL-3B-Instruct",
@@ -999,7 +999,7 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
                 )
 
             # Preloaded Test Cases
-            with gr.Accordion("📂 Preloaded Test Cases", open=False, elem_classes=["sidebar-accordion"]):
+            with gr.Accordion("Preloaded Test Cases", open=False, elem_classes=["sidebar-accordion"]):
                 gr.Examples(
                     examples=[
                         [
@@ -1082,7 +1082,7 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
 
             # Lower Row: Tabs for Parallel Cockpit vs. Full Report View
             with gr.Tabs(elem_classes=["cockpit-deck-tabs"]):
-                with gr.Tab("⊞ PARALLEL COCKPIT (Reasoning + Web + Report Side-by-Side)"):
+                with gr.Tab("PARALLEL COCKPIT (Reasoning + Web + Report Side-by-Side)"):
                     with gr.Row(elem_classes=["terminals-matrix-row"]):
                         # Terminal 1: Deep Reasoning Trace (<think>)
                         with gr.Column(scale=1, min_width=0, elem_classes=["cockpit-terminal-card"]):
@@ -1128,7 +1128,7 @@ omnisearch@agent:~$ netstat --active-rag --monitor
                                 elem_classes=["cockpit-terminal-body"]
                             )
 
-                        # Terminal 3: Final Executive Synthesis Report (Prominent Glowing Emerald Card)
+                        # Terminal 3: Final Executive Synthesis Report
                         with gr.Column(scale=1, min_width=0, elem_classes=["cockpit-terminal-card", "cockpit-terminal-card-report"]):
                             gr.HTML("""
                             <div class="panel-header-bar" style="background:#091b15; border-bottom: 2px solid #00ff9d;">
@@ -1137,22 +1137,22 @@ omnisearch@agent:~$ netstat --active-rag --monitor
                                     <span class="terminal-dot dot-yellow"></span>
                                     <span class="terminal-dot dot-green"></span>
                                 </div>
-                                <span class="panel-header-title" style="color:#00ff9d; font-weight:900;">TERMINAL 03 // 📑 FINAL_REPORT</span>
-                                <span class="panel-header-badge badge-synthesis" style="background:#00ff9d; color:#06090f; font-weight:900;">★ REPORT</span>
+                                <span class="panel-header-title" style="color:#00ff9d; font-weight:900;">TERMINAL 03 // FINAL_REPORT</span>
+                                <span class="panel-header-badge badge-synthesis" style="background:#00ff9d; color:#06090f; font-weight:900;">REPORT</span>
                             </div>
                             """)
                             answer_output = gr.Markdown(
                                 """```bash
 omnisearch@agent:~$ cat /var/out/EXECUTIVE_REPORT.md
-╔═══════════════════════════════════════════════════════╗
-║  📑 EXECUTIVE MISSION SYNTHESIS & FINDINGS REPORT     ║
-╚═══════════════════════════════════════════════════════╝
++-------------------------------------------------------+
+|  EXECUTIVE MISSION SYNTHESIS & FINDINGS REPORT        |
++-------------------------------------------------------+
 [STATUS] Waiting for inspection & verification...
 ```""",
                                 elem_classes=["cockpit-terminal-body"]
                             )
 
-                with gr.Tab("📑 FULL REPORT VIEW (Executive Summary & Findings)"):
+                with gr.Tab("FULL REPORT VIEW (Executive Summary & Findings)"):
                     with gr.Group(elem_classes=["full-report-container"]):
                         gr.HTML("""
                         <div class="panel-header-bar" style="background:#091b15; border-bottom: 2px solid #00ff9d;">
@@ -1162,15 +1162,15 @@ omnisearch@agent:~$ cat /var/out/EXECUTIVE_REPORT.md
                                 <span class="terminal-dot dot-green"></span>
                             </div>
                             <span class="panel-header-title" style="color:#00ff9d; font-weight:900;">EXECUTIVE_REPORT // VERIFIED_FINDINGS_DECK</span>
-                            <span class="panel-header-badge badge-synthesis" style="background:#00ff9d; color:#06090f; font-weight:900;">★ FULL REPORT VIEW</span>
+                            <span class="panel-header-badge badge-synthesis" style="background:#00ff9d; color:#06090f; font-weight:900;">REPORT VIEW</span>
                         </div>
                         """)
                         full_report_output = gr.Markdown(
                             """```bash
 omnisearch@agent:~$ cat /var/out/EXECUTIVE_REPORT.md
-╔═══════════════════════════════════════════════════════╗
-║  🎯 EXECUTIVE MISSION SYNTHESIS & FINDINGS REPORT     ║
-╚═══════════════════════════════════════════════════════╝
++-------------------------------------------------------+
+|  EXECUTIVE MISSION SYNTHESIS & FINDINGS REPORT        |
++-------------------------------------------------------+
 [STATUS] Waiting for visual perception & web verification...
 ```""",
                             elem_classes=["full-report-body"]

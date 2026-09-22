@@ -131,7 +131,7 @@ def search_wikipedia_api(query: str, max_results: int = 3) -> List[Dict]:
     clean_q = clean_search_query(query)
     url = f"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={urllib.parse.quote(clean_q)}&srlimit={max_results}&format=json"
     headers = {
-        "User-Agent": "OmniSearchAgent/2.0 (Autonomous Visual Research; contact@omnisearch.ai)"
+        "User-Agent": "Mozilla/5.0 (compatible; OmniSearchBot/2.0; +https://github.com/tsyncIO/omnisearch-agent)"
     }
     req = urllib.request.Request(url, headers=headers)
     try:
@@ -214,7 +214,7 @@ omnisearch@agent:~$ netstat --active-rag --query "{query}"
         title = res.get("title", "Reference Link")
         link = res.get("href", "#")
         snippet = res.get("body", "").strip()
-        md += f"**{i}. 🔗 [{title}]({link})**  \n"
+        md += f"**{i}. [{title}]({link})**  \n"
         md += f"> `{snippet}`\n\n"
         
     return md

@@ -39,26 +39,26 @@ def main():
         print("\n" + "="*60)
         print("DEMO RESULTS")
         print("="*60)
-        print("\n🧠 [Agent Thinking Process]:")
+        print("\n[AGENT_THINKING]:")
         print(final_state["thinking_text"])
 
-        print("\n🌐 [Web Search Results]:")
+        print("\n[WEB_RESULTS]:")
         print(final_state["web_results_md"])
 
-        print("\n🎯 [Final Synthesized Answer]:")
+        print("\n[FINAL_SYNTHESIS]:")
         print(final_state["final_answer"])
 
         # Save outputs
         annotated_path = os.path.join(output_dir, "annotated_grounding.jpg")
         final_state["annotated_image"].save(annotated_path)
-        print(f"\n💾 Saved annotated focus canvas to: {annotated_path}")
+        print(f"\nSaved annotated canvas to: {annotated_path}")
 
         for i, (crop_img, label) in enumerate(final_state["crop_gallery"]):
             crop_path = os.path.join(output_dir, f"crop_turn_{i+1}.jpg")
             crop_img.save(crop_path)
-            print(f"💾 Saved {label} to: {crop_path}")
+            print(f"Saved {label} to: {crop_path}")
 
-        print("\n✅ End-to-end demo execution completed successfully!")
+        print("\nDemo execution completed successfully.")
 
 if __name__ == "__main__":
     main()

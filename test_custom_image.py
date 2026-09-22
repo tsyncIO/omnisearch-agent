@@ -1,9 +1,10 @@
 import os
+import sys
 from PIL import Image
 from agent.visual_search_agent import OmniSearchVisualAgent
 
 def main():
-    image_path = "/home/tmdt-admin/tanvir/omnisearch-agent/sample_images/test.jpg"
+    image_path = sys.argv[1] if len(sys.argv) > 1 else "sample_images/test.jpg"
     print(f"Loading image from: {image_path}")
     image = Image.open(image_path)
     print(f"Image size: {image.size}")

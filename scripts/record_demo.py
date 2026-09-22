@@ -16,8 +16,8 @@ def main():
     if not os.path.exists(img_path):
         raise FileNotFoundError(f"Image not found at {img_path}")
 
-    print(f"🎬 Starting Demo Recording with Playwright...")
-    print(f"📁 Image: {img_path}")
+    print(f"[INFO] Starting demo capture with Playwright...")
+    print(f"[INFO] Image: {img_path}")
 
     frame_idx = 0
 
@@ -26,18 +26,18 @@ def main():
         # Use 1366x768 crisp standard viewport
         page = browser.new_page(viewport={"width": 1366, "height": 768})
 
-        print("🌐 Navigating to http://localhost:7860...")
+        print("[INFO] Navigating to http://localhost:7860...")
         page.goto("http://localhost:7860")
         page.wait_for_timeout(4000)
 
         # 1. Fill input image
-        print("📸 Uploading Colosseum image...")
+        print("[INFO] Uploading test image...")
         file_input = page.locator("input[type=file]").first
         file_input.set_input_files(img_path)
         page.wait_for_timeout(1500)
 
         # 2. Fill query prompt
-        print("💬 Filling query prompt...")
+        print("[INFO] Setting query prompt...")
         textarea = page.locator("textarea").first
         textarea.fill("what this structure is used for?")
         page.wait_for_timeout(1000)
@@ -49,7 +49,7 @@ def main():
             time.sleep(0.3)
 
         # 3. Click execute
-        print("⚡ Clicking [EXECUTE MISSION]...")
+        print("[INFO] Dispatching [EXECUTE MISSION]...")
         exec_btn = page.locator(".term-btn-primary").first
         exec_btn.click()
 
@@ -59,7 +59,7 @@ def main():
         is_complete = False
         consecutive_complete_count = 0
 
-        print("⏺️ Capturing frames during live mission execution...")
+        print("[INFO] Recording mission frames...")
         while time.time() - start_time < max_duration:
             page.screenshot(path=f"{frames_dir}/frame_{frame_idx:04d}.png")
             frame_idx += 1
@@ -69,7 +69,7 @@ def main():
             if "COMPLETE" in hud_text or "100%" in hud_text or "REPORT READY" in hud_text:
                 consecutive_complete_count += 1
                 if consecutive_complete_count >= 5:  # ensure it stays complete and rendered
-                    print(f"✅ Mission execution completed! Frame count: {frame_idx}")
+                    print(f"[INFO] Mission concluded. Frame count: {frame_idx}")
                     is_complete = True
                     break
             else:
@@ -78,14 +78,14 @@ def main():
             time.sleep(0.4)
 
         # Capture 6 frames of final parallel view
-        print("📸 Capturing final parallel report view...")
+        print("[INFO] Capturing final cockpit view...")
         for _ in range(6):
             page.screenshot(path=f"{frames_dir}/frame_{frame_idx:04d}.png")
             frame_idx += 1
             time.sleep(0.3)
 
         # Switch to FULL REPORT tab to showcase executive deck
-        print("📑 Clicking FULL REPORT VIEW tab...")
+        print("[INFO] Capturing FULL REPORT VIEW tab...")
         try:
             full_tab = page.get_by_role("tab", name="FULL REPORT VIEW")
             if full_tab.count() > 0:
@@ -100,12 +100,12 @@ def main():
 
         browser.close()
 
-    print(f"🎉 Captured {frame_idx} frames in {frames_dir}.")
+    print(f"[INFO] Total frames captured: {frame_idx}.")
 
     # 5. Convert frames to GIF using ffmpeg
     gif_path = os.path.abspath("assets/demo.gif")
     mp4_path = os.path.abspath("assets/demo.mp4")
-    print(f"🎞️ Compiling frames into high-quality GIF: {gif_path}...")
+    print(f"[INFO] Encoding GIF: {gif_path}...")
 
     # High quality palette-optimized GIF with smooth framerate and scaled resolution
     cmd_gif = [
@@ -118,8 +118,8 @@ def main():
     ]
     subprocess.run(cmd_gif, check=True)
 
-    # Also generate MP4 for ultra-smooth video
-    print(f"🎞️ Compiling MP4 video: {mp4_path}...")
+    # Also generate MP4 for video preview
+    print(f"[INFO] Encoding MP4: {mp4_path}...")
     cmd_mp4 = [
         "ffmpeg", "-y",
         "-framerate", "3",
@@ -133,12 +133,12 @@ def main():
 
     gif_size_mb = os.path.getsize(gif_path) / (1024 * 1024)
     mp4_size_mb = os.path.getsize(mp4_path) / (1024 * 1024)
-    print(f"✨ GIF created: {gif_path} ({gif_size_mb:.2f} MB)")
-    print(f"✨ MP4 created: {mp4_path} ({mp4_size_mb:.2f} MB)")
+    print(f"[SUCCESS] GIF created: {gif_path} ({gif_size_mb:.2f} MB)")
+    print(f"[SUCCESS] MP4 created: {mp4_path} ({mp4_size_mb:.2f} MB)")
 
     # Cleanup frames
     shutil.rmtree(frames_dir)
-    print("🧹 Frames cleaned up.")
+    print("[INFO] Intermediate frames cleaned up.")
 
 if __name__ == "__main__":
     main()

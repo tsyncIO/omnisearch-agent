@@ -10,7 +10,7 @@ if [ ! -f "${VENV_PYTHON}" ]; then
 fi
 
 echo "=========================================================="
-echo "🦅 Starting OmniSearch Agent (RTX A4000 16GB Optimized)"
+echo "Starting OmniSearch Agent (RTX A4000 16GB Optimized)"
 echo "=========================================================="
 
 PORT=${1:-7860}

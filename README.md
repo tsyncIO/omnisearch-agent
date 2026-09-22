@@ -1,5 +1,5 @@
-# 🦅 OmniSearch Agent
-### Autonomous Multi-Turn Visual Discovery & Live Web Intelligence
+# OmniSearch Agent
+### Multi-Turn Visual Discovery & Live Web Intelligence
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue.svg)](https://www.python.org/)
 [![PyTorch 2.4+](https://img.shields.io/badge/PyTorch-2.8.0%2Bcu128-orange.svg)](https://pytorch.org/)
@@ -10,69 +10,69 @@
 ---
 
 <p align="center">
-  <img src="assets/demo.gif" alt="OmniSearch Agent Cyber Cockpit Demo" width="100%" />
+  <img src="assets/demo.gif" alt="OmniSearch Agent Cockpit Demo" width="100%" />
 </p>
 
 <p align="center">
-  <b>⚡ Autonomous Cyber-Cockpit Demo:</b> Investigating the Roman Colosseum with multi-turn visual perception, live DuckDuckGo + Wikipedia grounding, and real-time executive report synthesis.
+  <b>Cockpit UI Demo:</b> Autonomous landmark analysis of the Roman Colosseum using multi-turn visual grounding, real-time web verification, and report synthesis.
 </p>
 
 ---
 
-## 🌟 Overview
+## Overview
 
-Standard vision-language models (VLMs) and visual search engines (like Google Lens) are single-turn black boxes: they inspect an image once and guess. When dealing with high-resolution imagery containing tiny text, hidden serial numbers, obscure logos, or fine-grained defects, they hallucinate or overlook critical evidence.
+Single-turn vision-language models and visual lookup tools evaluate inputs once without iterative verification. For dense imagery containing small typography, serial identifiers, fine architectural details, or defects, single-pass inspection frequently overlooks key visual evidence.
 
-**OmniSearch Agent** bridges this gap by turning the model into an **autonomous visual investigator**:
-1. **Perceives** an overall high-resolution scene.
-2. **Reasons Step-by-Step** (`<think>`) about where identifying clues lie.
-3. **Executes Visual Actions** (`<grounding>{"bbox_2d": ...}</grounding>`) to crop and zoom into candidate regions over multiple interaction turns.
-4. **Queries the Live Internet** (`<web_search>query</web_search>`) using free real-time search (DuckDuckGo) once key markers/models are identified.
-5. **Synthesizes a Comprehensive Report** connecting visual proof to real-time market data, technical specifications, or prices.
+**OmniSearch Agent** addresses this with an iterative agentic architecture:
+1. **Scene Ingest & Perception**: Analyzes high-resolution input imagery to identify candidates for deeper inspection.
+2. **Step-by-Step Reasoning**: Maintains explicit reasoning traces (`<think>`) across turns to plan targeted actions.
+3. **Visual Action Execution**: Emits normalized bounding box targets (`<grounding>{"bbox_2d": ...}</grounding>`) to crop and resample regions of interest via Lanczos interpolation.
+4. **Live Web Grounding**: Emits targeted search requests (`<web_search>query</web_search>`) to retrieve factual context from DuckDuckGo and Wikipedia.
+5. **Report Synthesis**: Synthesizes verified findings into a structured report (`<answer>`) backed by visual and external evidence.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```mermaid
 flowchart TD
-    User["User Query + High-Res Image"] --> UI["Gradio Dashboard"]
+    User["User Query + Image"] --> UI["Gradio Cockpit"]
     UI --> Agent["OmniSearch Agent Loop"]
-    Agent --> LLM["Mini-o3-7B-v1 / Qwen2.5-VL-7B (4-bit NF4)"]
+    Agent --> LLM["Qwen2.5-VL / Mini-o3 (4-bit NF4)"]
     
-    LLM --> Decision{"Action Decision"}
+    LLM --> Decision{"Action Dispatch"}
     
-    Decision -->|"<grounding> Tag"| CropTool["Visual Crop & Resample Tool"]
+    Decision -->|"<grounding>"| CropTool["Visual Crop & Resample Tool"]
     CropTool -->|"Observation Patch + Bounding Box"| Agent
     
-    Decision -->|"<web_search> Tag"| WebTool["Live DuckDuckGo Search Tool"]
-    WebTool -->|"Real-Time Web Snippets & Links"| Agent
+    Decision -->|"<web_search>"| WebTool["DuckDuckGo / Wiki Search Tool"]
+    WebTool -->|"Web Snippets & References"| Agent
     
-    Decision -->|"<answer> Tag"| Output["Synthesized Intelligence Report"]
+    Decision -->|"<answer>"| Output["Synthesized Findings Report"]
     Output --> UI
 ```
 
 ---
 
-## ⚡ 16GB VRAM Optimization (RTX A4000)
+## Memory & VRAM Optimization
 
-Running a 7B multimodal reasoning model with multi-turn high-resolution image tokens usually risks out-of-memory (OOM) errors on 16GB cards. OmniSearch Agent solves this via:
-* **4-bit NF4 Quantization** via `bitsandbytes` (`bnb_4bit_use_double_quant=True`, `compute_dtype=bfloat16`).
-* **Memory Footprint**:
-  * Base Model: **~4.8 GB**
-  * Image Tokens & Multi-turn KV Cache: **~3.2 GB**
+Multi-turn high-resolution multimodal inference is optimized for single-GPU environments (e.g., NVIDIA RTX A4000 16GB):
+* **Quantization**: 4-bit NormalFloat4 (NF4) via `bitsandbytes` (`bnb_4bit_use_double_quant=True`, `compute_dtype=bfloat16`).
+* **VRAM Allocation Profile**:
+  * Base Model Weights: **~4.8 GB**
+  * Image Tokens & Multi-Turn Cache: **~3.2 GB**
   * Gradio & System Buffers: **~0.6 GB**
-  * **Total Peak VRAM**: **~8.6 GB / 16 GB** (Leaves >7 GB headroom!).
+  * **Peak Allocation**: **~8.6 GB / 16 GB** (>7 GB operational headroom).
 
 ---
 
-## 🚀 Quickstart
+## Quickstart
 
-### 1. Prerequisites
-- Linux with NVIDIA GPU (e.g. RTX A4000, RTX 3080/3090/4080, T4, or A10G)
+### Prerequisites
+- Linux with NVIDIA GPU (e.g. RTX A4000, RTX 3080/3090/4080, T4, A10G)
 - CUDA 12.x / 13.x
 
-### 2. Setup
+### Setup
 ```bash
 git clone https://github.com/tsyncIO/omnisearch-agent.git
 cd omnisearch-agent
@@ -85,45 +85,46 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Launch the Interactive UI
+### Run
 ```bash
 ./run.sh 7860
 ```
-Open `http://localhost:7860` in your web browser.
+Navigate to `http://localhost:7860` in your browser.
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 omnisearch-agent/
-├── app.py                      # Interactive Gradio dashboard
-├── run.sh                      # One-click execution script
+├── app.py                      # Interactive Gradio cockpit dashboard
+├── run.sh                      # Shell launch script
 ├── requirements.txt            # Python dependencies
 ├── agent/
 │   ├── __init__.py
 │   ├── prompts.py              # System prompts & multi-turn templates
-│   └── visual_search_agent.py  # Agent loop with streaming updates & tool dispatch
-└── tools/
-    ├── __init__.py
-    ├── visual_tools.py         # Image cropping, Lanczos resizing, bounding box overlay
-    └── web_tools.py            # Live DuckDuckGo search integration & markdown formatter
+│   └── visual_search_agent.py  # Agent execution loop, streaming, and tool dispatch
+├── tools/
+│   ├── __init__.py
+│   ├── visual_tools.py         # Image cropping, Lanczos resampling, box annotation
+│   └── web_tools.py            # DuckDuckGo and Wikipedia retrieval integration
+└── scripts/
+    └── record_demo.py          # Headless recording automation script
 ```
 
 ---
 
-## 💡 Real-World Applications
+## Applications
 
-* **Luxury Goods & Antiques Authentication**: Zooming into dial hallmarks, serial numbers, and cross-referencing auction histories.
-* **Electronics & PCB Inspection**: Reading microscopic chip part numbers and pulling datasheet specs from manufacturer portals.
-* **Gigapixel Document & Invoice Auditing**: Inspecting dense footnotes and verifying corporate registry data.
-* **Geospatial & Satellite Reconnaissance**: Inspecting high-res drone/satellite imagery to count assets and verify coordinates.
+* **Hardware & PCB Inspection**: Reading surface-mount markings and cross-referencing component datasheets.
+* **Document & Asset Auditing**: Inspecting fine-print typography, serial tags, and external verification records.
+* **Object & Landmark Identification**: Inspecting structural markers and retrieving live historical documentation.
+* **Auction & Provenance Verification**: Inspecting dial hallmarks, maker signatures, and auction database records.
 
 ---
 
-## 📜 Acknowledgements
+## References & Acknowledgements
 
-Built upon principles and foundations from:
 * [Mini-o3: Scaling Up Reasoning Patterns and Interaction Turns for Visual Search (ICLR 2026)](https://arxiv.org/pdf/2509.07969)
 * [veRL: Volcano Engine Reinforcement Learning for LLM](https://github.com/volcengine/verl)
 * [Qwen2.5-VL](https://github.com/QwenLM/Qwen2.5-VL)

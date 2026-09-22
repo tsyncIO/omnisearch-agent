@@ -148,9 +148,9 @@ class OmniSearchVisualAgent:
         start_time = time.time()
         event_logs: List[str] = []
 
-        def add_log(icon: str, tag: str, msg: str):
+        def add_log(level: str, tag: str, msg: str):
             elapsed = time.time() - start_time
-            entry = f"[{elapsed:05.2f}s] {icon} [{tag}] {msg}"
+            entry = f"[{elapsed:05.2f}s] [{level}] [{tag}] {msg}"
             event_logs.append(entry)
             return entry
 
@@ -160,8 +160,8 @@ class OmniSearchVisualAgent:
         crop_gallery = []
         performed_web_search = False
 
-        add_log("🚀", "INGEST", f"Optical stream ingested: {original_image.width}x{original_image.height} RGB")
-        add_log("⚡", "VLM_INIT", f"Backbone {self.model_name} initialized (4-bit NF4)")
+        add_log("INF", "INGEST", f"Optical stream ingested: {original_image.width}x{original_image.height} RGB")
+        add_log("OK", "VLM_INIT", f"Backbone {self.model_name} initialized (4-bit NF4)")
 
         # Terminal initial headers
         initial_thought = (
@@ -219,19 +219,19 @@ class OmniSearchVisualAgent:
         candidate_web_query = clean_search_query(query)
         if auto_web_search and len(candidate_web_query.split()) >= 3 and not candidate_web_query.startswith("this landmark"):
             try:
-                add_log("🌐", "PRE_RAG", f"Pre-querying live web for '{candidate_web_query}'")
+                add_log("NET", "PRE_RAG", f"Pre-querying live web for '{candidate_web_query}'")
                 pre_results = search_web_ddg(candidate_web_query, max_results=3)
                 if pre_results:
                     web_search_cards = format_search_results_markdown(pre_results, candidate_web_query)
                     performed_web_search = True
-                    add_log("🔗", "PRE_RAG_OK", f"Indexed {len(pre_results)} live references")
+                    add_log("OK", "PRE_RAG_OK", f"Indexed {len(pre_results)} live references")
             except Exception as e:
                 print(f"[OmniSearchAgent] Pre-search notice: {e}")
 
         for turn in range(max_turns):
             turn_num = turn + 1
             turn_progress = int(25 + (turn / max_turns) * 45)
-            add_log("👁️", f"TURN_{turn_num}", f"Formulating visual perception & CoT reasoning ({turn_num}/{max_turns})")
+            add_log("RUN", f"TURN_{turn_num}", f"Formulating visual perception & CoT reasoning ({turn_num}/{max_turns})")
 
             yield {
                 "status": f"Turn {turn_num}/{max_turns}: Generating visual reasoning & planning actions...",
@@ -329,8 +329,8 @@ class OmniSearchVisualAgent:
                     crop_gallery.append((cropped_patch, f"Region {len(box_records)}"))
 
                 annotated_current = draw_bounding_boxes(original_image, box_records)
-                add_log("🔬", "TOOL_CROP", f"Extracted {len(grounding_list)} target region(s) [Focus #{len(box_records)}]")
-                add_log("🖼️", "OBSERVATION", f"Observation patch #{len(crop_gallery)} added to multi-turn gallery")
+                add_log("VIS", "TOOL_CROP", f"Extracted {len(grounding_list)} target region(s) [Focus #{len(box_records)}]")
+                add_log("VIS", "OBSERVATION", f"Observation patch #{len(crop_gallery)} added to multi-turn gallery")
                 yield {
                     "status": f"Turn {turn_num}: Cropped {len(grounding_list)} target regions. Feeding back into perception...",
                     "stage": "CROPPING",
@@ -371,7 +371,7 @@ class OmniSearchVisualAgent:
                     web_query = extract_search_intent_keywords(turn_think + " " + (answer or ""), user_query=query)
 
                 performed_web_search = True
-                add_log("🌐", "TOOL_WEB", f"Transmitted live search query: '{web_query}'")
+                add_log("NET", "TOOL_WEB", f"Transmitted live search query: '{web_query}'")
                 yield {
                     "status": f"Turn {turn_num}: Querying live web intelligence for '{web_query}'...",
                     "stage": "ACTIVE_RAG",
@@ -392,7 +392,7 @@ class OmniSearchVisualAgent:
 
                 results = search_web_ddg(web_query, max_results=4)
                 web_search_cards = format_search_results_markdown(results, web_query)
-                add_log("🔗", "WEB_HTTP_200", f"Retrieved {len(results)} verified references (DuckDuckGo + Wikipedia)")
+                add_log("OK", "WEB_HTTP_200", f"Retrieved {len(results)} verified references (DuckDuckGo + Wikipedia)")
 
                 results_text = "\n".join([f"- [{r['title']}]: {r['body']} (Link: {r['href']})" for r in results])
                 web_prompt = NEXT_TURN_PROMPT_WEB.format(query=web_query, web_results_text=results_text)
@@ -416,11 +416,11 @@ class OmniSearchVisualAgent:
 
             # 3. Check for Concluded Answer
             if answer:
-                add_log("📑", "SYNTHESIS", "Cross-referencing visual proof with live web facts...")
+                add_log("INF", "SYNTHESIS", "Cross-referencing visual proof with live web facts...")
                 # If user wanted web search and it hasn't run yet, enrich now
                 if auto_web_search and not performed_web_search:
                     search_kw = extract_search_intent_keywords(turn_think + " " + answer, user_query=query)
-                    add_log("🌐", "AUTO_RAG", f"Enriching synthesis with live web search for '{search_kw}'")
+                    add_log("NET", "AUTO_RAG", f"Enriching synthesis with live web search for '{search_kw}'")
                     yield {
                         "status": f"Finalizing: Cross-referencing findings online for '{search_kw}'...",
                         "stage": "ACTIVE_RAG",
@@ -441,20 +441,20 @@ class OmniSearchVisualAgent:
                     if web_res:
                         web_search_cards = format_search_results_markdown(web_res, search_kw)
                         performed_web_search = True
-                        add_log("🔗", "RAG_OK", f"Retrieved {len(web_res)} references for '{search_kw}'")
+                        add_log("OK", "RAG_OK", f"Retrieved {len(web_res)} references for '{search_kw}'")
 
                 final_formatted = (
                     "```bash\n"
                     "omnisearch@agent:~$ cat /var/out/EXECUTIVE_REPORT.md\n"
                     "[REPORT_GEN] 200 OK • EXECUTIVE SYNTHESIS REPORT\n"
                     "```\n\n"
-                    f"### 🎯 Key Findings & Visual Evidence\n\n"
+                    f"### Key Findings & Visual Evidence\n\n"
                     f"{answer}\n"
                 )
 
-                add_log("✅", "COMPLETE", "Autonomous mission concluded with verified report.")
+                add_log("OK", "COMPLETE", "Autonomous mission concluded with verified report.")
                 yield {
-                    "status": "✅ Completed! Autonomous visual search finished.",
+                    "status": "Completed: Autonomous visual search finished.",
                     "stage": "COMPLETE",
                     "progress": 100,
                     "event_logs": list(event_logs),
@@ -473,7 +473,7 @@ class OmniSearchVisualAgent:
             })
 
         # Max turns reached fallback
-        add_log("⚠️", "MAX_TURNS", "Reached maximum exploration turns. Compiling synthesis.")
+        add_log("WRN", "MAX_TURNS", "Reached maximum exploration turns. Compiling synthesis.")
         fallback_ans = remainder if remainder else (turn_think if turn_think else response_text)
         if auto_web_search and not performed_web_search:
             search_kw = extract_search_intent_keywords(fallback_ans, user_query=query)
@@ -486,13 +486,13 @@ class OmniSearchVisualAgent:
             "omnisearch@agent:~$ cat /var/out/EXECUTIVE_REPORT.md\n"
             "[REPORT_GEN] 200 OK • MAXIMUM EXPLORATION TURNS REACHED\n"
             "```\n\n"
-            f"### 🎯 Key Findings & Visual Evidence\n\n"
+            f"### Key Findings & Visual Evidence\n\n"
             f"{fallback_ans}\n"
         )
 
-        add_log("✅", "COMPLETE", "Mission concluded with best visual synthesis.")
+        add_log("OK", "COMPLETE", "Mission concluded with visual synthesis.")
         yield {
-            "status": "✅ Max turns reached. Concluded with best visual synthesis.",
+            "status": "Max turns reached. Concluded with visual synthesis.",
             "stage": "COMPLETE",
             "progress": 100,
             "event_logs": list(event_logs),
