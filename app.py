@@ -98,7 +98,7 @@ custom_css = """
 }
 """
 
-with gr.Blocks(theme=gr.themes.Soft(primary_hue="cyan"), css=custom_css, title="OmniSearch Agent") as demo:
+with gr.Blocks(title="OmniSearch Agent") as demo:
     gr.HTML("""
     <div class="main-header">
         <h1>🦅 OmniSearch Agent</h1>
@@ -168,4 +168,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     print(f"[OmniSearch Agent] Starting Gradio UI on port {args.port}...")
-    demo.queue().launch(server_name="0.0.0.0", server_port=args.port, share=args.share)
+    demo.queue().launch(
+        server_name="0.0.0.0",
+        server_port=args.port,
+        share=args.share,
+        theme=gr.themes.Soft(primary_hue="cyan"),
+        css=custom_css
+    )
