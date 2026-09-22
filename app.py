@@ -201,61 +201,64 @@ omnisearch@agent:~$ tail -f /var/log/EXECUTIVE_REPORT.md
             final_answer         # Full Report View (Dedicated Tab)
         )
 
-# Modern Cyber/Terminal CSS with High Contrast White & Emerald Report Typography
+# Modern Cyber/Terminal CSS with Fixed Left Sidebar & Zero Window Scrolling
 custom_css = """
-/* GLOBAL RESET */
+/* GLOBAL RESET & SCREEN LOCK */
 * {
     box-sizing: border-box !important;
 }
 html, body {
-    min-height: 100vh !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
     margin: 0 !important;
     padding: 0 !important;
     background-color: #06090f !important;
     color: #f8fafc !important;
     font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, Menlo, Consolas, monospace !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
+    overflow: hidden !important;
 }
 
-/* GRADIO CONTAINER */
+/* GRADIO CONTAINER: FIT EXACTLY IN 100VH WITHOUT WINDOW SCROLL */
 .gradio-container {
     max-width: 100% !important;
     width: 100% !important;
-    min-height: 100vh !important;
-    padding: 6px 14px !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    padding: 4px 8px !important;
     display: flex !important;
     flex-direction: column !important;
     background-color: #06090f !important;
+    overflow: hidden !important;
 }
 
-/* TERMINAL SYSTEM NAVBAR */
+/* TERMINAL SYSTEM NAVBAR (Compact 28px) */
 .terminal-navbar {
     background: linear-gradient(90deg, #0d131f 0%, #111a2e 50%, #0d131f 100%);
     border: 1px solid #1c2738;
-    border-radius: 6px;
-    padding: 5px 12px;
-    height: 36px;
-    min-height: 36px;
+    border-radius: 5px;
+    padding: 2px 10px;
+    height: 28px;
+    min-height: 28px;
+    max-height: 28px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 6px;
-    flex: 0 0 auto;
+    margin-bottom: 4px;
+    flex: 0 0 28px;
 }
 .terminal-nav-left {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 .terminal-dots {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
 }
 .terminal-dot {
-    width: 9px;
-    height: 9px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     display: inline-block;
 }
@@ -264,24 +267,24 @@ html, body {
 .terminal-dot.dot-green { background: #27c93f; box-shadow: 0 0 5px rgba(39, 201, 63, 0.5); }
 
 .terminal-logo-tag {
-    font-size: 0.88rem;
+    font-size: 0.82rem;
     font-weight: 800;
     letter-spacing: 0.08em;
     color: #00f0ff;
 }
 .terminal-version-tag {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     color: #64748b;
     border-left: 1px solid #1e293b;
-    padding-left: 8px;
+    padding-left: 6px;
 }
 .terminal-nav-center {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
 }
 .telemetry-item {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     color: #64748b;
     font-weight: 600;
 }
@@ -294,8 +297,8 @@ html, body {
     gap: 6px;
 }
 .status-live-dot {
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
     background: #00ff9d;
     border-radius: 50%;
     box-shadow: 0 0 6px #00ff9d;
@@ -307,30 +310,50 @@ html, body {
     100% { opacity: 0.4; }
 }
 .status-live-text {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     font-weight: 700;
     color: #00ff9d;
     letter-spacing: 0.05em;
 }
 
-/* MAIN COCKPIT ROW */
-.main-cockpit-row {
-    flex: 1 1 auto !important;
-    min-height: calc(100vh - 52px) !important;
+/* MAIN COCKPIT ROW: FIXED HORIZONTAL SPLIT (NEVER VERTICAL STACK, NEVER WRAP) */
+#main_cockpit_row,
+.main-cockpit-row,
+.gradio-container .main-cockpit-row,
+div.main-cockpit-row {
+    flex: 1 1 0% !important;
+    height: calc(100vh - 38px) !important;
+    max-height: calc(100vh - 38px) !important;
+    min-height: 0 !important;
     display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    width: 100% !important;
     gap: 8px !important;
     margin: 0 !important;
+    overflow: hidden !important;
 }
 
-/* LEFT COLUMN: CONTROL CONSOLE */
-.control-console-col {
+/* LEFT SIDEBAR: RIGIDLY PINNED ON THE LEFT (NEVER SPANS FULL SCREEN) */
+#control_console_col,
+.control-console-col,
+.gradio-container .control-console-col {
+    flex: 0 0 310px !important;
+    width: 310px !important;
+    max-width: 310px !important;
+    min-width: 280px !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     background: #090e17 !important;
     border: 1px solid #182232 !important;
     border-radius: 6px !important;
-    padding: 8px !important;
+    padding: 6px 8px !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 6px !important;
+    gap: 4px !important;
 }
 .control-console-col::-webkit-scrollbar {
     width: 4px;
@@ -340,24 +363,150 @@ html, body {
     border-radius: 2px;
 }
 
+/* COMPACT INPUTS IN LEFT SIDEBAR */
+.control-console-col .block {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: none !important;
+}
+.control-console-col label {
+    margin-bottom: 2px !important;
+}
+.control-console-col label span {
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    color: #94a3b8 !important;
+}
+.control-console-col .image-container,
+.control-console-col [data-testid="image"] {
+    max-height: 125px !important;
+    min-height: 105px !important;
+    height: 120px !important;
+}
+.control-console-col [data-testid="image"] img {
+    object-fit: contain !important;
+    max-height: 115px !important;
+}
+.control-console-col textarea {
+    font-size: 0.74rem !important;
+    line-height: 1.3 !important;
+    padding: 4px 6px !important;
+    min-height: 44px !important;
+    max-height: 52px !important;
+    background: #06090f !important;
+    border: 1px solid #1e293b !important;
+    color: #f8fafc !important;
+    border-radius: 4px !important;
+}
+
+/* ACTION BUTTON ROW */
+.action-btn-row {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
+    margin: 2px 0 !important;
+    flex: 0 0 30px !important;
+    height: 30px !important;
+    min-height: 30px !important;
+}
+.term-btn-primary {
+    background: rgba(0, 240, 255, 0.15) !important;
+    border: 1px solid #00f0ff !important;
+    color: #00f0ff !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.05em !important;
+    font-size: 0.76rem !important;
+    border-radius: 4px !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    padding: 0 6px !important;
+    transition: all 0.2s ease !important;
+}
+.term-btn-primary:hover {
+    background: #00f0ff !important;
+    color: #06090f !important;
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.5) !important;
+}
+.term-btn-secondary {
+    background: #0d131f !important;
+    border: 1px solid #1c2738 !important;
+    color: #94a3b8 !important;
+    font-size: 0.72rem !important;
+    border-radius: 4px !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    padding: 0 6px !important;
+}
+
+/* LIVE EVENT LOG WIDGET IN SIDEBAR */
+.event-logger-box {
+    background: #06090f !important;
+    border: 1px solid #182232 !important;
+    border-radius: 5px !important;
+    overflow: hidden !important;
+    flex: 0 0 auto !important;
+    margin-top: 2px !important;
+}
+.event-logger-body {
+    height: 100px !important;
+    max-height: 100px !important;
+    overflow-y: auto !important;
+    padding: 3px 6px !important;
+    font-size: 0.66rem !important;
+    line-height: 1.3 !important;
+    background: #06090f !important;
+    color: #38bdf8 !important;
+}
+.event-logger-body::-webkit-scrollbar {
+    width: 3px;
+}
+.event-logger-body::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 2px;
+}
+
+/* ACCORDIONS IN SIDEBAR */
+.sidebar-accordion {
+    background: #090e17 !important;
+    border: 1px solid #182232 !important;
+    border-radius: 4px !important;
+    margin: 2px 0 !important;
+    flex: 0 0 auto !important;
+}
+.sidebar-accordion summary {
+    padding: 3px 6px !important;
+    font-size: 0.68rem !important;
+    color: #94a3b8 !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+}
+
 /* RIGHT COLUMN: DISPLAY MATRIX */
-.display-matrix-col {
+#display_matrix_col,
+.display-matrix-col,
+.gradio-container .display-matrix-col {
+    flex: 1 1 0% !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 6px !important;
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
+    gap: 4px !important;
 }
 
 /* DYNAMIC STEPPER & HUD BOX */
 .hud-stepper-box {
     background: linear-gradient(90deg, #0d131f 0%, #111a2e 100%);
     border: 1px solid #1c2738;
-    border-radius: 6px;
-    padding: 5px 10px;
+    border-radius: 5px;
+    padding: 3px 8px;
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
     flex: 0 0 auto;
 }
 .hud-top-line {
@@ -368,12 +517,12 @@ html, body {
 .hud-stages-pills {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
 }
 .step-chip {
-    font-size: 0.68rem;
+    font-size: 0.64rem;
     font-weight: 700;
-    padding: 2px 7px;
+    padding: 1px 6px;
     border-radius: 3px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -400,7 +549,7 @@ html, body {
     border: 1px solid #1e293b;
 }
 .step-connector {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
 }
 .step-connector.conn-done { color: #00ff9d; }
 .step-connector.conn-pending { color: #334155; }
@@ -408,29 +557,29 @@ html, body {
 .hud-metric-box {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 .hud-report-alert {
     background: rgba(0, 255, 157, 0.2);
     color: #00ff9d;
     border: 1px solid #00ff9d;
-    padding: 1px 7px;
+    padding: 1px 6px;
     border-radius: 3px;
-    font-size: 0.68rem;
+    font-size: 0.64rem;
     font-weight: 800;
     animation: pulse 1.5s infinite;
 }
 .hud-ascii-bar {
-    font-size: 0.7rem;
+    font-size: 0.66rem;
     color: #38bdf8;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
 }
 .hud-percent-pill {
-    font-size: 0.7rem;
+    font-size: 0.66rem;
     font-weight: 800;
     background: #1e293b;
     color: #00f0ff;
-    padding: 1px 6px;
+    padding: 0px 5px;
     border-radius: 3px;
     border: 1px solid #00f0ff;
 }
@@ -455,8 +604,8 @@ html, body {
 .hud-status-line {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 0.74rem;
+    gap: 5px;
+    font-size: 0.70rem;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -475,24 +624,25 @@ html, body {
 .panel-header-bar {
     background: #0f1726;
     border-bottom: 1px solid #1c2738;
-    padding: 4px 8px;
-    height: 24px;
-    min-height: 24px;
+    padding: 3px 8px;
+    height: 22px;
+    min-height: 22px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     user-select: none;
+    flex: 0 0 22px;
 }
 .panel-header-title {
-    font-size: 0.68rem;
+    font-size: 0.66rem;
     font-weight: 700;
     letter-spacing: 0.05em;
     color: #94a3b8;
     text-transform: uppercase;
 }
 .panel-header-badge {
-    font-size: 0.62rem;
-    padding: 1px 5px;
+    font-size: 0.60rem;
+    padding: 1px 4px;
     border-radius: 3px;
     font-weight: 700;
 }
@@ -500,17 +650,22 @@ html, body {
 .badge-web { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
 .badge-synthesis { background: #00ff9d; color: #06090f; font-weight: 900; }
 
-/* UPPER ROW: OPTICAL VIEWPORTS */
+/* UPPER ROW: OPTICAL VIEWPORTS (CANVAS + CROPS) */
 .optical-viewports-row {
-    flex: 0 0 auto !important;
-    height: 215px !important;
-    min-height: 215px !important;
+    flex: 0 0 160px !important;
+    height: 160px !important;
+    min-height: 160px !important;
+    max-height: 160px !important;
     overflow: hidden !important;
     display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
     gap: 6px !important;
     margin: 0 !important;
 }
 .viewport-card {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
     height: 100% !important;
     background: #090e17 !important;
     border: 1px solid #182232 !important;
@@ -521,29 +676,78 @@ html, body {
 }
 .viewport-card .viewport-content {
     flex: 1 1 auto !important;
-    height: 191px !important;
+    height: 138px !important;
+    max-height: 138px !important;
     overflow: hidden !important;
     background: #06090f !important;
+}
+.viewport-card .viewport-content img {
+    object-fit: contain !important;
+    height: 135px !important;
 }
 
 /* LOWER DECK: TABS CONTAINER */
 .cockpit-deck-tabs {
-    flex: 1 1 auto !important;
+    flex: 1 1 0% !important;
     display: flex !important;
     flex-direction: column !important;
-    min-height: 240px !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+}
+.cockpit-deck-tabs > .tab-nav {
+    flex: 0 0 24px !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    border-bottom: 1px solid #1c2738 !important;
+    margin-bottom: 3px !important;
+    background: transparent !important;
+}
+.cockpit-deck-tabs > .tab-nav button {
+    font-size: 0.70rem !important;
+    font-weight: 700 !important;
+    padding: 2px 10px !important;
+    color: #94a3b8 !important;
+    border-radius: 4px 4px 0 0 !important;
+    border: 1px solid transparent !important;
+}
+.cockpit-deck-tabs > .tab-nav button.selected {
+    color: #00ff9d !important;
+    background: #090e17 !important;
+    border-color: #1c2738 #1c2738 transparent #1c2738 !important;
+}
+.cockpit-deck-tabs > .tabitem,
+.cockpit-deck-tabs > div[role="tabpanel"],
+.cockpit-deck-tabs [role="tabpanel"] {
+    flex: 1 1 0% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    padding: 0 !important;
 }
 
 /* LOWER ROW: 3 PARALLEL TERMINALS */
 .terminals-matrix-row {
-    flex: 1 1 auto !important;
-    min-height: 230px !important;
+    flex: 1 1 0% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
     display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
     gap: 6px !important;
     margin: 0 !important;
+    overflow: hidden !important;
 }
 .cockpit-terminal-card {
-    min-height: 220px !important;
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
     background: #090e17 !important;
     border: 1px solid #182232 !important;
     border-radius: 6px !important;
@@ -552,16 +756,18 @@ html, body {
     flex-direction: column !important;
 }
 .cockpit-terminal-card-report {
+    flex: 1.35 1 0% !important;
     border: 2px solid #00ff9d !important;
     box-shadow: 0 0 16px rgba(0, 255, 157, 0.22) !important;
 }
 .cockpit-terminal-body {
-    flex: 1 1 auto !important;
-    height: 210px !important;
+    flex: 1 1 0% !important;
+    height: calc(100% - 22px) !important;
+    max-height: calc(100% - 22px) !important;
     overflow-y: auto !important;
-    padding: 8px 10px !important;
-    font-size: 0.78rem !important;
-    line-height: 1.5 !important;
+    padding: 6px 8px !important;
+    font-size: 0.74rem !important;
+    line-height: 1.45 !important;
     color: #f8fafc !important;
     background: #06090f !important;
 }
@@ -575,22 +781,26 @@ html, body {
 
 /* FULL REPORT TAB STYLING */
 .full-report-container {
+    flex: 1 1 0% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
     background: #090e17 !important;
     border: 2px solid #00ff9d !important;
     border-radius: 6px !important;
     overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
-    min-height: 230px !important;
     box-shadow: 0 0 20px rgba(0, 255, 157, 0.2) !important;
 }
 .full-report-body {
-    flex: 1 1 auto !important;
-    height: 210px !important;
+    flex: 1 1 0% !important;
+    height: calc(100% - 22px) !important;
+    max-height: calc(100% - 22px) !important;
     overflow-y: auto !important;
-    padding: 12px 18px !important;
-    font-size: 0.86rem !important;
-    line-height: 1.65 !important;
+    padding: 10px 14px !important;
+    font-size: 0.82rem !important;
+    line-height: 1.6 !important;
     color: #f8fafc !important;
     background: #06090f !important;
 }
@@ -610,15 +820,15 @@ html, body {
 .cockpit-terminal-body p, .cockpit-terminal-body li, .cockpit-terminal-body span,
 .full-report-body p, .full-report-body li, .full-report-body span {
     color: #f8fafc !important; /* Bright crisp white */
-    font-size: 0.82rem !important;
-    line-height: 1.6 !important;
+    font-size: 0.78rem !important;
+    line-height: 1.55 !important;
 }
 .cockpit-terminal-body h1, .cockpit-terminal-body h2, .cockpit-terminal-body h3, .cockpit-terminal-body h4,
 .full-report-body h1, .full-report-body h2, .full-report-body h3, .full-report-body h4 {
     color: #00ff9d !important; /* Vivid neon emerald */
     font-weight: 800 !important;
-    margin-top: 10px !important;
-    margin-bottom: 6px !important;
+    margin-top: 8px !important;
+    margin-bottom: 4px !important;
 }
 /* Override Gradio prose default dimming */
 .prose p, .prose li, .prose span {
@@ -628,38 +838,13 @@ html, body {
     color: #00ff9d !important;
 }
 
-/* LIVE EVENT LOG WIDGET IN LEFT COLUMN */
-.event-logger-box {
-    background: #06090f !important;
-    border: 1px solid #182232 !important;
-    border-radius: 5px !important;
-    overflow: hidden !important;
-}
-.event-logger-body {
-    height: 135px !important;
-    max-height: 135px !important;
-    overflow-y: auto !important;
-    padding: 4px 6px !important;
-    font-size: 0.70rem !important;
-    line-height: 1.35 !important;
-    background: #06090f !important;
-    color: #38bdf8 !important;
-}
-.event-logger-body::-webkit-scrollbar {
-    width: 4px;
-}
-.event-logger-body::-webkit-scrollbar-thumb {
-    background: #1e293b;
-    border-radius: 2px;
-}
-
 /* TERMINAL TEXT FORMATTING */
 .cockpit-terminal-body pre, .cockpit-terminal-body code, .event-logger-body pre, .event-logger-body code, .full-report-body pre, .full-report-body code {
     background: #0d131f !important;
     border: 1px solid #1c2738 !important;
     color: #38bdf8 !important;
     border-radius: 3px !important;
-    font-size: 0.74rem !important;
+    font-size: 0.72rem !important;
 }
 .cockpit-terminal-body a, .full-report-body a {
     color: #38bdf8 !important;
@@ -678,28 +863,37 @@ html, body {
     color: #cbd5e1 !important;
 }
 
-/* TERMINAL BUTTONS */
-.term-btn-primary {
-    background: rgba(0, 240, 255, 0.15) !important;
-    border: 1px solid #00f0ff !important;
-    color: #00f0ff !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.05em !important;
-    font-size: 0.82rem !important;
-    border-radius: 4px !important;
-    transition: all 0.2s ease !important;
-}
-.term-btn-primary:hover {
-    background: #00f0ff !important;
-    color: #06090f !important;
-    box-shadow: 0 0 12px rgba(0, 240, 255, 0.5) !important;
-}
-.term-btn-secondary {
-    background: #0d131f !important;
-    border: 1px solid #1c2738 !important;
-    color: #94a3b8 !important;
-    font-size: 0.76rem !important;
-    border-radius: 4px !important;
+/* HARD OVERRIDE AGAINST RESPONSIVE COLLAPSE / WRAPPING AT ANY RESOLUTION */
+@media (max-width: 3840px), (max-width: 2560px), (max-width: 1920px), (max-width: 1440px), (max-width: 1200px), (max-width: 900px), (max-width: 768px) {
+    #main_cockpit_row,
+    .main-cockpit-row {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+    }
+    #control_console_col,
+    .control-console-col {
+        flex: 0 0 310px !important;
+        width: 310px !important;
+        max-width: 310px !important;
+        min-width: 280px !important;
+    }
+    #display_matrix_col,
+    .display-matrix-col {
+        flex: 1 1 0% !important;
+        width: 0 !important;
+        min-width: 0 !important;
+    }
+    .optical-viewports-row {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+    }
+    .terminals-matrix-row {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+    }
 }
 """
 
@@ -730,9 +924,9 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
     """)
 
     # 2. Main Cockpit Row
-    with gr.Row(elem_classes=["main-cockpit-row"]):
-        # Left: Clean Control Console & Live Event Logger (Without Bins/Venue/Landmark pills)
-        with gr.Column(scale=3, min_width=280, elem_classes=["control-console-col"]):
+    with gr.Row(elem_id="main_cockpit_row", elem_classes=["main-cockpit-row"]):
+        # Left: Clean Control Console & Live Event Logger (Pinned left sidebar)
+        with gr.Column(scale=1, min_width=280, elem_id="control_console_col", elem_classes=["control-console-col"]):
             gr.HTML("""
             <div class="panel-header-bar">
                 <span class="panel-header-title">INPUT_CONSOLE // MISSION_CONTROL</span>
@@ -744,16 +938,17 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
                 type="pil",
                 label="📸 Optical Stream Input",
                 sources=["upload", "clipboard"],
-                height=160
+                height=120
             )
 
             query_input = gr.Textbox(
                 label="💬 Mission Objective Prompt",
                 placeholder="$ Enter autonomous visual objective or question...",
-                lines=2
+                lines=2,
+                max_lines=2
             )
 
-            with gr.Row():
+            with gr.Row(elem_classes=["action-btn-row"]):
                 submit_btn = gr.Button("⚡ [ EXECUTE MISSION ]", variant="primary", scale=3, elem_classes=["term-btn-primary"])
                 clear_btn = gr.ClearButton([image_input, query_input], value="↺ Reset", scale=1, elem_classes=["term-btn-secondary"])
 
@@ -776,7 +971,7 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
                 )
 
             # Settings Accordion
-            with gr.Accordion("⚙️ Engine Parameters", open=False):
+            with gr.Accordion("⚙️ Engine Parameters", open=False, elem_classes=["sidebar-accordion"]):
                 model_selector = gr.Dropdown(
                     choices=[
                         "Qwen/Qwen2.5-VL-3B-Instruct",
@@ -796,7 +991,7 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
                 )
 
             # Preloaded Test Cases
-            with gr.Accordion("📂 Preloaded Test Cases", open=False):
+            with gr.Accordion("📂 Preloaded Test Cases", open=False, elem_classes=["sidebar-accordion"]):
                 gr.Examples(
                     examples=[
                         [
@@ -825,7 +1020,7 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
                 )
 
         # Right: Display Matrix (Upper Viewports + Lower Terminals & Full Report)
-        with gr.Column(scale=9, elem_classes=["display-matrix-col"]):
+        with gr.Column(scale=4, min_width=0, elem_id="display_matrix_col", elem_classes=["display-matrix-col"]):
             # Dynamic Stepper & HUD Box
             hud_stepper_output = gr.HTML(
                 format_hud_stepper("INIT", 0, "Ready. Select an example or drop an image and click [EXECUTE MISSION].")
@@ -834,7 +1029,7 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
             # Upper Row: Optical Grounding Matrix (Canvas + Crops side-by-side)
             with gr.Row(elem_classes=["optical-viewports-row"]):
                 # Viewport 1: Live Grounding Canvas
-                with gr.Column(scale=1, elem_classes=["viewport-card"]):
+                with gr.Column(scale=1, min_width=0, elem_classes=["viewport-card"]):
                     gr.HTML("""
                     <div class="panel-header-bar">
                         <div class="terminal-dots">
@@ -848,13 +1043,13 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
                     """)
                     canvas_output = gr.Image(
                         interactive=False,
-                        height=191,
+                        height=138,
                         show_label=False,
                         elem_classes=["viewport-content"]
                     )
 
                 # Viewport 2: Zoomed Inspection Patches
-                with gr.Column(scale=1, elem_classes=["viewport-card"]):
+                with gr.Column(scale=1, min_width=0, elem_classes=["viewport-card"]):
                     gr.HTML("""
                     <div class="panel-header-bar">
                         <div class="terminal-dots">
@@ -869,7 +1064,7 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
                     crops_gallery = gr.Gallery(
                         columns=3,
                         rows=1,
-                        height=191,
+                        height=138,
                         preview=True,
                         allow_preview=True,
                         object_fit="contain",
@@ -882,7 +1077,7 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
                 with gr.Tab("⊞ PARALLEL COCKPIT (Reasoning + Web + Report Side-by-Side)"):
                     with gr.Row(elem_classes=["terminals-matrix-row"]):
                         # Terminal 1: Deep Reasoning Trace (<think>)
-                        with gr.Column(scale=2, min_width=200, elem_classes=["cockpit-terminal-card"]):
+                        with gr.Column(scale=1, min_width=0, elem_classes=["cockpit-terminal-card"]):
                             gr.HTML("""
                             <div class="panel-header-bar">
                                 <div class="terminal-dots">
@@ -904,7 +1099,7 @@ omnisearch@agent:~$ cat /proc/reasoning_stream
                             )
 
                         # Terminal 2: Live Web Sources (Active RAG)
-                        with gr.Column(scale=2, min_width=200, elem_classes=["cockpit-terminal-card"]):
+                        with gr.Column(scale=1, min_width=0, elem_classes=["cockpit-terminal-card"]):
                             gr.HTML("""
                             <div class="panel-header-bar">
                                 <div class="terminal-dots">
@@ -926,7 +1121,7 @@ omnisearch@agent:~$ netstat --active-rag --monitor
                             )
 
                         # Terminal 3: Final Executive Synthesis Report (Prominent Glowing Emerald Card)
-                        with gr.Column(scale=3, min_width=250, elem_classes=["cockpit-terminal-card", "cockpit-terminal-card-report"]):
+                        with gr.Column(scale=1, min_width=0, elem_classes=["cockpit-terminal-card", "cockpit-terminal-card-report"]):
                             gr.HTML("""
                             <div class="panel-header-bar" style="background:#091b15; border-bottom: 2px solid #00ff9d;">
                                 <div class="terminal-dots">
