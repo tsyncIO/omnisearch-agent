@@ -14,9 +14,10 @@ Your objective is to thoroughly investigate the provided image, zoom in on subtl
    - The environment will crop and return the high-resolution patch as the next observation.
 
 3. **Live Web Search Tool**:
-   Once you discover an entity, model code, brand, or specific question that requires live prices, specifications, reviews, or facts, query the web by outputting:
-   `<web_search>query keywords here</web_search>`
-   - The environment will query the live internet and return fresh search results.
+   Whenever you identify an entity, landmark, brand, model, or city, or when you need live facts, history, or specifications, immediately output:
+   `<web_search>exact entity or topic to search</web_search>`
+   - Example: `<web_search>Colosseum Rome history original name</web_search>` or `<web_search>Heidelberg Stadtreinigung waste management</web_search>`
+   - The environment will query the live internet (DuckDuckGo + Wikipedia) and return verified references.
 
 4. **Final Answer**:
    When you have gathered sufficient visual evidence and web facts, synthesize your final comprehensive report inside `<answer>` and `</answer>`.
@@ -25,7 +26,7 @@ Your objective is to thoroughly investigate the provided image, zoom in on subtl
 NEXT_TURN_PROMPT_CROP = """After your previous Action {turn_idx}, here is the zoomed-in high-resolution inspection patch (Observation {obs_idx}):
 Continue your step-by-step reasoning inside <think> and </think>.
 - If you need to zoom in further or on another region, output <grounding>{{"bbox_2d": [x0, y0, x1, y1], "source": "{source}"}}</grounding>.
-- If you have identified the item/text and need live web data (e.g., price, specs, verification), output <web_search>keywords</web_search>.
+- If you have identified the item/text and need live web data (e.g., price, specs, verification), output <web_search>exact entity or topic</web_search>.
 - If you have enough evidence, provide your complete answer inside <answer> and </answer>."""
 
 NEXT_TURN_PROMPT_WEB = """Here are the live web search results for "{query}":

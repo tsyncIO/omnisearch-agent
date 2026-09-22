@@ -5,4 +5,6 @@ __pycache__/
 .cache/
 *.log
 demo_outputs/
+demo_outputs_test/
+.gradio/
 .DS_Store

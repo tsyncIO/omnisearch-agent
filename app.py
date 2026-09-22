@@ -24,20 +24,51 @@ def run_agent_interface(
     model_choice: str
 ):
     if input_image is None:
+        init_term_reasoning = """```bash
+omnisearch@agent:~$ cat /proc/reasoning_stream
+[SYS_WARN] No image input detected in stdin.
+[STATUS] Please upload an image or click a preloaded test case.
+```"""
+        init_term_web = """```bash
+omnisearch@agent:~$ netstat --active-rag --monitor
+[SYS_HALT] Waiting for visual stream before dispatching queries.
+```"""
+        init_term_synthesis = """```bash
+omnisearch@agent:~$ cat /var/out/synthesis.md
+[STATUS] Idle. Awaiting visual inspection session.
+```"""
         yield (
             "⚠️ **Please upload an image first.**",
             None,
             None,
             [],
             [],
-            "### ⚠️ No Image Provided\nPlease upload an image to begin visual search.",
-            "*No web search executed.*",
-            "*No reasoning log.*"
+            init_term_reasoning,
+            init_term_web,
+            init_term_synthesis
         )
         return
 
     if not query.strip():
-        query = "Identify the key item or text in this image, zoom in if needed, and find information about it."
+        query = "Identify the key item or landmark in this image, zoom in if needed, and search the web for details."
+
+    # Immediate responsive yield
+    boot_reasoning = """```bash
+omnisearch@agent:~$ cat /proc/reasoning_stream
+[SYS_INIT] Vision-Language grounding session starting...
+[CUDA] Initializing NVIDIA RTX A4000 16GB (4-bit NF4)
+[STATUS] Tokenizing image and formulating initial chain-of-thought...
+```"""
+    boot_web = """```bash
+omnisearch@agent:~$ netstat --active-rag --monitor
+[DAEMON] Live DuckDuckGo & Wikipedia RAG bridge active.
+[STATUS] Standby: monitoring entity recognition stream...
+```"""
+    boot_synthesis = """```bash
+omnisearch@agent:~$ tail -f /var/log/executive_synthesis.md
+[REPORT_GEN] Executive synthesis pipeline online.
+[STATUS] Awaiting visual inspection & web verification...
+```"""
 
     yield (
         "🚀 **Initializing Agent & Loading Weights...**",
@@ -45,9 +76,9 @@ def run_agent_interface(
         input_image,
         [],
         [],
-        "*Agent is starting visual inspection...*",
-        "*Fetching web sources...*",
-        "*Initializing chain-of-thought...*"
+        boot_reasoning,
+        boot_web,
+        boot_synthesis
     )
 
     agent = get_agent(model_name=model_choice, load_in_4bit=True)
@@ -65,33 +96,27 @@ def run_agent_interface(
         web_md = state["web_results_md"]
         thinking_md = state["thinking_text"]
 
-        answer_display = (
-            f"### 🎯 Agent Synthesized Report\n\n{final_answer}"
-            if final_answer
-            else "*Agent is actively reasoning and investigating...*"
-        )
-
         yield (
             status,
             annotated_img,      # Canvas Full View
             annotated_img,      # Canvas Side-by-Side
             gallery,            # Gallery Lightbox View
             gallery,            # Gallery Side-by-Side
-            answer_display,
-            web_md,
-            thinking_md
+            thinking_md,        # Terminal 1: Deep Reasoning Trace
+            web_md,             # Terminal 2: Live Web Intelligence
+            final_answer        # Terminal 3: Final Synthesis
         )
 
-# Modern, polished CSS styling
+# Modern, polished Cyber/Hacker CSS styling with authentic Terminal windows
 custom_css = """
 /* App Header */
 .app-header {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    padding: 24px 28px;
-    margin-bottom: 20px;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, #0b0f19 0%, #161e2e 50%, #0b0f19 100%);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 14px;
+    padding: 22px 26px;
+    margin-bottom: 18px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
 }
 .app-header-title {
     font-size: 2.1rem;
@@ -105,8 +130,8 @@ custom_css = """
 }
 .app-header-desc {
     color: #94a3b8;
-    font-size: 1rem;
-    margin: 8px 0 0 0;
+    font-size: 0.98rem;
+    margin: 6px 0 0 0;
 }
 .badge-chip {
     display: inline-flex;
@@ -119,47 +144,150 @@ custom_css = """
     border-radius: 9999px;
     font-size: 0.82rem;
     font-weight: 600;
-    margin-top: 10px;
-}
-
-/* Card Containers */
-.card-container {
-    background: var(--background-fill-secondary);
-    border: 1px solid var(--border-color-primary);
-    border-radius: 14px;
-    padding: 16px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    margin-top: 8px;
 }
 
 /* Status Pill */
 .status-pill {
-    background: linear-gradient(90deg, rgba(6, 182, 212, 0.12) 0%, rgba(59, 130, 246, 0.12) 100%);
-    border: 1px solid rgba(6, 182, 212, 0.3);
+    background: linear-gradient(90deg, rgba(6, 182, 212, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
+    border: 1px solid rgba(6, 182, 212, 0.35);
     border-radius: 10px;
     padding: 10px 16px;
-    font-weight: 500;
-    color: #0284c7;
+    font-weight: 600;
+    color: #38bdf8;
     margin-bottom: 12px;
 }
 
-/* Quick prompt chips */
-.prompt-chips {
+/* Section Header for Parallel Terminals */
+.terminal-section-banner {
+    background: linear-gradient(90deg, #161b22 0%, #0d1117 100%);
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 12px 18px;
+    margin: 18px 0 12px 0;
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 8px 0 12px 0;
+    align-items: center;
+    justify-content: space-between;
 }
-.prompt-chip-btn {
-    font-size: 0.8rem !important;
-    padding: 4px 10px !important;
-    border-radius: 8px !important;
+.terminal-section-title {
+    font-family: ui-monospace, 'SFMono-Regular', 'JetBrains Mono', Menlo, Consolas, monospace;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #58a6ff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.terminal-section-subtitle {
+    font-size: 0.82rem;
+    color: #8b949e;
 }
 
-/* Gallery & Image Containers */
-.visual-studio-panel {
-    border: 1px solid var(--border-color-primary);
-    border-radius: 12px;
-    overflow: hidden;
+/* Authentic Terminal Window Container */
+.terminal-container {
+    background: #0d1117 !important;
+    border: 1px solid #30363d !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45) !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Terminal Title Bar */
+.terminal-top-bar {
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    padding: 9px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+}
+.terminal-dots {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.terminal-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.terminal-dot.dot-red { background: #ff5f56; }
+.terminal-dot.dot-yellow { background: #ffbd2e; }
+.terminal-dot.dot-green { background: #27c93f; }
+
+.terminal-title-text {
+    font-family: ui-monospace, 'SFMono-Regular', 'JetBrains Mono', Menlo, monospace;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: #c9d1d9;
+    text-transform: uppercase;
+}
+
+.terminal-badge {
+    font-family: ui-monospace, 'SFMono-Regular', 'JetBrains Mono', Menlo, monospace;
+    font-size: 0.72rem;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: 700;
+}
+.badge-reasoning { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+.badge-web { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+.badge-synthesis { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+
+/* Terminal Scrollable Body */
+.terminal-window-body {
+    background: #0d1117 !important;
+    height: 480px !important;
+    max-height: 480px !important;
+    overflow-y: auto !important;
+    padding: 14px 16px !important;
+    font-family: ui-monospace, 'SFMono-Regular', 'JetBrains Mono', Menlo, Consolas, monospace !important;
+    font-size: 0.88rem !important;
+    line-height: 1.6 !important;
+    color: #c9d1d9 !important;
+}
+
+/* Custom Scrollbar for Terminal */
+.terminal-window-body::-webkit-scrollbar {
+    width: 6px;
+}
+.terminal-window-body::-webkit-scrollbar-track {
+    background: #0d1117;
+}
+.terminal-window-body::-webkit-scrollbar-thumb {
+    background: #30363d;
+    border-radius: 3px;
+}
+.terminal-window-body::-webkit-scrollbar-thumb:hover {
+    background: #8b949e;
+}
+
+/* Terminal Content Formatting */
+.terminal-window-body pre, .terminal-window-body code {
+    background: #161b22 !important;
+    border: 1px solid #30363d !important;
+    color: #58a6ff !important;
+    border-radius: 6px !important;
+    font-family: inherit !important;
+}
+.terminal-window-body a {
+    color: #58a6ff !important;
+    text-decoration: underline !important;
+}
+.terminal-window-body strong {
+    color: #f0f6fc !important;
+}
+.terminal-window-body blockquote {
+    border-left: 3px solid #38bdf8 !important;
+    margin: 8px 0 !important;
+    padding: 4px 12px !important;
+    background: rgba(56, 189, 248, 0.05) !important;
+    color: #8b949e !important;
 }
 """
 
@@ -170,21 +298,22 @@ with gr.Blocks(title="OmniSearch Studio") as demo:
         <p class="app-header-desc">Autonomous Multi-Turn Visual Discovery & Live Web Intelligence — Powered by Mini-o3 & Qwen2.5-VL</p>
         <div>
             <span class="badge-chip">● NVIDIA RTX A4000 16GB (4-bit NF4)</span>
-            <span class="badge-chip" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(52, 211, 153, 0.3);">⚡ Live Active RAG</span>
-            <span class="badge-chip" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border-color: rgba(192, 132, 252, 0.3);">🔬 Multi-Turn Zoom</span>
+            <span class="badge-chip" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(52, 211, 153, 0.3);">⚡ Live Active RAG (DDG + Wikipedia)</span>
+            <span class="badge-chip" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border-color: rgba(192, 132, 252, 0.3);">🔬 Multi-Turn Zoom Grounding</span>
         </div>
     </div>
     """)
 
+    # Top Section: Controls (Left) & Visual Grounding Canvas (Right)
     with gr.Row():
         # Left: Controls, Upload & Settings
-        with gr.Column(scale=4):
+        with gr.Column(scale=5):
             with gr.Group():
                 image_input = gr.Image(
                     type="pil",
                     label="📸 Input Image (High-Resolution)",
                     sources=["upload", "clipboard"],
-                    height=360
+                    height=340
                 )
 
                 query_input = gr.Textbox(
@@ -194,7 +323,7 @@ with gr.Blocks(title="OmniSearch Studio") as demo:
                 )
 
                 # Quick-fill Prompt Pills
-                gr.Markdown("<small style='color: var(--body-text-color-subdued);'>⚡ Quick Prompts:</small>")
+                gr.Markdown("<small style='color: var(--body-text-color-subdued); font-weight:600;'>⚡ Quick Prompts:</small>")
                 with gr.Row():
                     p1_btn = gr.Button("🇩🇪 Sort German Waste Bins", size="sm", variant="secondary")
                     p2_btn = gr.Button("🎬 Identify Venue & Brand", size="sm", variant="secondary")
@@ -212,12 +341,12 @@ with gr.Blocks(title="OmniSearch Studio") as demo:
                     label="Backbone Vision Model"
                 )
                 max_turns_slider = gr.Slider(
-                    minimum=1, maximum=6, value=3, step=1,
+                    minimum=1, maximum=5, value=3, step=1,
                     label="Max Exploration Turns"
                 )
                 auto_web_checkbox = gr.Checkbox(
                     value=True,
-                    label="Auto-enrich with Live Web Search (DuckDuckGo)"
+                    label="Auto-enrich with Live Web Search (DuckDuckGo + Wikipedia)"
                 )
 
             with gr.Row():
@@ -253,20 +382,20 @@ with gr.Blocks(title="OmniSearch Studio") as demo:
                 inputs=[image_input, query_input, max_turns_slider, auto_web_checkbox, model_selector]
             )
 
-        # Right: Visual Studio & Research Workspace
-        with gr.Column(scale=6):
+        # Right: Visual Inspection Studio
+        with gr.Column(scale=7):
             status_output = gr.Markdown(
                 "⚡ **Activity**: Ready. Select an example or upload an image and click **Run Autonomous Search**.",
                 elem_classes=["status-pill"]
             )
 
-            # Visual Inspection Studio (Full tabs with natural fit and lightbox preview)
+            # Visual Inspection Studio Tabs
             with gr.Tabs():
                 with gr.Tab("🎯 Grounding Canvas (Full View)"):
                     canvas_output_full = gr.Image(
                         label="Visual Grounding & Detected Bounding Boxes",
                         interactive=False,
-                        height=480
+                        height=460
                     )
 
                 with gr.Tab("🔎 Zoomed Inspection Crops (Click to Enlarge)"):
@@ -274,7 +403,7 @@ with gr.Blocks(title="OmniSearch Studio") as demo:
                         label="Multi-Turn Zoomed Patches",
                         columns=[2, 3],
                         rows=[1, 2],
-                        height=480,
+                        height=460,
                         preview=True,
                         allow_preview=True,
                         object_fit="contain",
@@ -297,22 +426,88 @@ with gr.Blocks(title="OmniSearch Studio") as demo:
                             object_fit="contain"
                         )
 
-            # Intelligence & Report Studio
-            with gr.Tabs():
-                with gr.Tab("📋 Final Synthesis"):
-                    answer_output = gr.Markdown(
-                        "*Your synthesized report will appear here once the agent concludes its investigation.*"
-                    )
+    # Section Banner for Parallel Side-by-Side Terminals
+    gr.HTML("""
+    <div class="terminal-section-banner">
+        <div class="terminal-section-title">
+            <span>⚡ AUTONOMOUS AGENT PARALLEL TERMINALS</span>
+        </div>
+        <div class="terminal-section-subtitle">
+            Concurrent live streaming: Deep Reasoning Trace (<think>) ⏐ Live Web Sources (Active RAG) ⏐ Final Synthesis
+        </div>
+    </div>
+    """)
 
-                with gr.Tab("🌐 Live Web Sources"):
-                    web_output = gr.Markdown(
-                        "*Live web search citations and links will appear here.*"
-                    )
+    # Bottom Section: 3 Authentic Parallel Side-by-Side Terminals
+    with gr.Row(elem_classes=["terminals-row"]):
+        # Terminal 1: Deep Reasoning Trace (<think>)
+        with gr.Column(scale=1, min_width=320):
+            with gr.Group(elem_classes=["terminal-container"]):
+                gr.HTML("""
+                <div class="terminal-top-bar">
+                    <div class="terminal-dots">
+                        <span class="terminal-dot dot-red"></span>
+                        <span class="terminal-dot dot-yellow"></span>
+                        <span class="terminal-dot dot-green"></span>
+                    </div>
+                    <span class="terminal-title-text">TERMINAL 01 // REASONING_TRACE</span>
+                    <span class="terminal-badge badge-reasoning">&lt;THINK&gt;</span>
+                </div>
+                """)
+                thinking_output = gr.Markdown(
+                    """```bash
+omnisearch@agent:~$ cat /proc/reasoning_stream
+[SYS_INIT] Qwen2.5-VL CoT streaming daemon active.
+[STATUS] Awaiting visual input & task prompt...
+```""",
+                    elem_classes=["terminal-window-body"]
+                )
 
-                with gr.Tab("🧠 Deep Reasoning Trace (<think>)"):
-                    thinking_output = gr.Markdown(
-                        "*Agent internal chain-of-thought tokens will stream here.*"
-                    )
+        # Terminal 2: Live Web Sources (Active RAG)
+        with gr.Column(scale=1, min_width=320):
+            with gr.Group(elem_classes=["terminal-container"]):
+                gr.HTML("""
+                <div class="terminal-top-bar">
+                    <div class="terminal-dots">
+                        <span class="terminal-dot dot-red"></span>
+                        <span class="terminal-dot dot-yellow"></span>
+                        <span class="terminal-dot dot-green"></span>
+                    </div>
+                    <span class="terminal-title-text">TERMINAL 02 // LIVE_WEB_INTEL</span>
+                    <span class="terminal-badge badge-web">ACTIVE_RAG</span>
+                </div>
+                """)
+                web_output = gr.Markdown(
+                    """```bash
+omnisearch@agent:~$ netstat --active-rag --monitor
+[DAEMON] DuckDuckGo & Wikipedia search bridges online.
+[STATUS] Standby: monitoring entity recognition stream...
+```""",
+                    elem_classes=["terminal-window-body"]
+                )
+
+        # Terminal 3: Final Synthesis
+        with gr.Column(scale=1, min_width=320):
+            with gr.Group(elem_classes=["terminal-container"]):
+                gr.HTML("""
+                <div class="terminal-top-bar">
+                    <div class="terminal-dots">
+                        <span class="terminal-dot dot-red"></span>
+                        <span class="terminal-dot dot-yellow"></span>
+                        <span class="terminal-dot dot-green"></span>
+                    </div>
+                    <span class="terminal-title-text">TERMINAL 03 // FINAL_SYNTHESIS</span>
+                    <span class="terminal-badge badge-synthesis">REPORT</span>
+                </div>
+                """)
+                answer_output = gr.Markdown(
+                    """```bash
+omnisearch@agent:~$ tail -f /var/log/executive_synthesis.md
+[REPORT_GEN] Synthesis pipeline online.
+[STATUS] Waiting for inspection & verification...
+```""",
+                    elem_classes=["terminal-window-body"]
+                )
 
     # Quick prompt button click events
     p1_btn.click(
@@ -348,9 +543,9 @@ with gr.Blocks(title="OmniSearch Studio") as demo:
             canvas_output_split,
             crops_output_gallery,
             crops_output_split,
-            answer_output,
+            thinking_output,
             web_output,
-            thinking_output
+            answer_output
         ]
     )
 
