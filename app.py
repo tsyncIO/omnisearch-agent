@@ -2,6 +2,7 @@ import os
 import argparse
 import gradio as gr
 from PIL import Image
+from typing import List
 from agent.visual_search_agent import OmniSearchVisualAgent
 
 # Global lazy agent instance
@@ -16,6 +17,70 @@ def get_agent(model_name: str = "Qwen/Qwen2.5-VL-3B-Instruct", load_in_4bit: boo
         )
     return agent_instance
 
+def format_hud_stepper(stage: str, progress: int, status_text: str) -> str:
+    stage_order = ["INIT", "PERCEPTION", "CROPPING", "ACTIVE_RAG", "SYNTHESIS", "COMPLETE"]
+    current_idx = stage_order.index(stage) if stage in stage_order else 0
+
+    stages_def = [
+        ("INIT", "1. INGEST"),
+        ("PERCEPTION", "2. PERCEIVE"),
+        ("CROPPING", "3. ZOOM CROP"),
+        ("ACTIVE_RAG", "4. WEB RAG"),
+        ("SYNTHESIS", "5. REPORT"),
+    ]
+
+    chips_html = ""
+    for i, (st_key, st_label) in enumerate(stages_def):
+        if i < current_idx or stage == "COMPLETE":
+            cls = "step-chip done"
+            lbl = f"✔ {st_label}"
+        elif i == current_idx:
+            cls = "step-chip active"
+            lbl = f"⚡ {st_label}"
+        else:
+            cls = "step-chip pending"
+            lbl = st_label
+
+        chips_html += f'<span class="{cls}">{lbl}</span>'
+        if i < len(stages_def) - 1:
+            conn_cls = "conn-done" if (i < current_idx or stage == "COMPLETE") else "conn-pending"
+            chips_html += f'<span class="step-connector {conn_cls}">▸</span>'
+
+    filled = int(progress / 5)
+    empty = 20 - filled
+    ascii_bar = "█" * filled + "░" * empty
+
+    return f"""
+    <div class="hud-stepper-box">
+        <div class="hud-top-line">
+            <div class="hud-stages-pills">{chips_html}</div>
+            <div class="hud-metric-box">
+                <span class="hud-ascii-bar">[{ascii_bar}]</span>
+                <span class="hud-percent-pill">{progress}%</span>
+            </div>
+        </div>
+        <div class="hud-progress-line">
+            <div class="hud-progress-track">
+                <div class="hud-progress-fill" style="width: {progress}%;"></div>
+            </div>
+        </div>
+        <div class="hud-status-line">
+            <span class="hud-activity-label">⚡ [{stage}]:</span>
+            <span class="hud-activity-text">{status_text}</span>
+        </div>
+    </div>
+    """
+
+def format_event_logs(logs: List[str]) -> str:
+    if not logs:
+        return """```bash
+[00.00s] 🟢 [STANDBY] Event logger daemon active.
+[00.00s] 💡 [READY] Select an example or upload an image and click [EXECUTE].
+```"""
+    # Keep last 14 logs for clean viewport fit
+    recent = logs[-14:]
+    return "```bash\n" + "\n".join(recent) + "\n```"
+
 def run_agent_interface(
     input_image: Image.Image,
     query: str,
@@ -24,6 +89,11 @@ def run_agent_interface(
     model_choice: str
 ):
     if input_image is None:
+        init_hud = format_hud_stepper("INIT", 0, "⚠️ [ALERT]: Please drop an image or click a test case.")
+        init_logs = """```bash
+[00.00s] ⚠️ [ALERT] No optical feed detected.
+[00.00s] 💡 [STANDBY] Awaiting image upload...
+```"""
         init_term_reasoning = """```bash
 omnisearch@agent:~$ cat /proc/reasoning_stream
 [SYS_WARN] No optical stream detected in stdin.
@@ -38,7 +108,8 @@ omnisearch@agent:~$ cat /var/out/synthesis.md
 [STATUS] Idle. Awaiting visual inspection session.
 ```"""
         yield (
-            "⚠️ **[SYS_ALERT]**: Please upload or select an image to initiate autonomous mission.",
+            init_hud,
+            init_logs,
             None,
             [],
             init_term_reasoning,
@@ -50,6 +121,12 @@ omnisearch@agent:~$ cat /var/out/synthesis.md
     if not query.strip():
         query = "Identify the key item or landmark in this image, zoom in if needed, and search the web for details."
 
+    boot_hud = format_hud_stepper("INIT", 12, "Loading neural weights into RTX A4000 VRAM...")
+    boot_logs = """```bash
+[00.00s] 🚀 [START] Ingested optical stream.
+[00.15s] ⚡ [GPU_ALLOC] Allocated 8.5 GB VRAM on NVIDIA RTX A4000 (NF4).
+[00.30s] 🧠 [VLM_LOAD] Compiling Qwen2.5-VL vision-language encoder...
+```"""
     boot_reasoning = """```bash
 omnisearch@agent:~$ cat /proc/reasoning_stream
 [SYS_INIT] Optical grounding matrix online.
@@ -68,7 +145,8 @@ omnisearch@agent:~$ tail -f /var/log/executive_synthesis.md
 ```"""
 
     yield (
-        "🚀 **[INITIALIZING]**: Loading weights into RTX A4000 & parsing mission prompt...",
+        boot_hud,
+        boot_logs,
         input_image,
         [],
         boot_reasoning,
@@ -84,7 +162,14 @@ omnisearch@agent:~$ tail -f /var/log/executive_synthesis.md
         max_turns=max_turns,
         auto_web_search=auto_web
     ):
-        status = f"⚡ **[ACTIVITY]**: {state['status']}"
+        stage = state.get("stage", "PERCEPTION")
+        progress = state.get("progress", 50)
+        status_text = state["status"]
+        event_logs = state.get("event_logs", [])
+
+        hud_html = format_hud_stepper(stage, progress, status_text)
+        logs_md = format_event_logs(event_logs)
+
         annotated_img = state["annotated_image"]
         gallery = state["crop_gallery"]
         final_answer = state["final_answer"]
@@ -92,7 +177,8 @@ omnisearch@agent:~$ tail -f /var/log/executive_synthesis.md
         thinking_md = state["thinking_text"]
 
         yield (
-            status,
+            hud_html,
+            logs_md,
             annotated_img,
             gallery,
             thinking_md,
@@ -100,7 +186,7 @@ omnisearch@agent:~$ tail -f /var/log/executive_synthesis.md
             final_answer
         )
 
-# Modern Cyber/Terminal CSS that fits completely in a single window
+# Modern Cyber/Terminal CSS that fits completely in a single window with Dynamic Stepper HUD
 custom_css = """
 /* GLOBAL RESET & VIEWPORT LOCK */
 * {
@@ -123,7 +209,7 @@ html, body {
     width: 100% !important;
     height: 100vh !important;
     max-height: 100vh !important;
-    padding: 6px 12px !important;
+    padding: 5px 10px !important;
     overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
@@ -135,13 +221,13 @@ html, body {
     background: linear-gradient(90deg, #0d131f 0%, #111a2e 50%, #0d131f 100%);
     border: 1px solid #1c2738;
     border-radius: 6px;
-    padding: 6px 12px;
-    height: 38px;
-    min-height: 38px;
+    padding: 5px 12px;
+    height: 36px;
+    min-height: 36px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
     flex: 0 0 auto;
 }
 .terminal-nav-left {
@@ -217,8 +303,8 @@ html, body {
 /* MAIN COCKPIT ROW (Fills remaining screen height) */
 .main-cockpit-row {
     flex: 1 1 auto !important;
-    height: calc(100vh - 54px) !important;
-    max-height: calc(100vh - 54px) !important;
+    height: calc(100vh - 48px) !important;
+    max-height: calc(100vh - 48px) !important;
     overflow: hidden !important;
     display: flex !important;
     gap: 8px !important;
@@ -233,10 +319,10 @@ html, body {
     background: #090e17 !important;
     border: 1px solid #182232 !important;
     border-radius: 6px !important;
-    padding: 8px !important;
+    padding: 6px !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 6px !important;
+    gap: 5px !important;
 }
 .control-console-col::-webkit-scrollbar {
     width: 4px;
@@ -253,50 +339,144 @@ html, body {
     overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 6px !important;
+    gap: 5px !important;
     flex: 1 1 auto !important;
 }
 
-/* TELEMETRY STATUS PILL */
-.telemetry-status-bar {
-    height: 30px !important;
-    min-height: 30px !important;
-    max-height: 30px !important;
-    background: #0d131f !important;
-    border: 1px solid #1c2738 !important;
-    border-radius: 5px !important;
-    padding: 4px 10px !important;
-    font-size: 0.78rem !important;
-    color: #38bdf8 !important;
-    display: flex !important;
-    align-items: center !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
+/* DYNAMIC STEPPER & HUD BOX */
+.hud-stepper-box {
+    background: linear-gradient(90deg, #0d131f 0%, #111a2e 100%);
+    border: 1px solid #1c2738;
+    border-radius: 6px;
+    padding: 5px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 0 0 auto;
+}
+.hud-top-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.hud-stages-pills {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.step-chip {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.step-chip.done {
+    background: rgba(0, 255, 157, 0.12);
+    color: #00ff9d;
+    border: 1px solid rgba(0, 255, 157, 0.3);
+}
+.step-chip.active {
+    background: rgba(0, 240, 255, 0.2);
+    color: #00f0ff;
+    border: 1px solid #00f0ff;
+    box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+    animation: activeGlow 1.5s infinite alternate;
+}
+@keyframes activeGlow {
+    0% { border-color: rgba(0, 240, 255, 0.5); }
+    100% { border-color: #00f0ff; }
+}
+.step-chip.pending {
+    background: rgba(30, 41, 59, 0.6);
+    color: #64748b;
+    border: 1px solid #1e293b;
+}
+.step-connector {
+    font-size: 0.65rem;
+}
+.step-connector.conn-done { color: #00ff9d; }
+.step-connector.conn-pending { color: #334155; }
+
+.hud-metric-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.hud-ascii-bar {
+    font-size: 0.7rem;
+    color: #38bdf8;
+    letter-spacing: 0.05em;
+}
+.hud-percent-pill {
+    font-size: 0.7rem;
+    font-weight: 800;
+    background: #1e293b;
+    color: #00f0ff;
+    padding: 1px 6px;
+    border-radius: 3px;
+    border: 1px solid #00f0ff;
+}
+
+.hud-progress-line {
+    width: 100%;
+}
+.hud-progress-track {
+    width: 100%;
+    height: 3px;
+    background: #162032;
+    border-radius: 2px;
+    overflow: hidden;
+}
+.hud-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00f0ff 0%, #00ff9d 100%);
+    box-shadow: 0 0 6px #00f0ff;
+    transition: width 0.3s ease;
+}
+
+.hud-status-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.74rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.hud-activity-label {
+    font-weight: 800;
+    color: #00f0ff;
+}
+.hud-activity-text {
+    color: #94a3b8;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* PANEL HEADER BAR */
 .panel-header-bar {
     background: #0f1726;
     border-bottom: 1px solid #1c2738;
-    padding: 4px 8px;
-    height: 24px;
-    min-height: 24px;
+    padding: 3px 8px;
+    height: 22px;
+    min-height: 22px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     user-select: none;
 }
 .panel-header-title {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 700;
     letter-spacing: 0.05em;
     color: #94a3b8;
     text-transform: uppercase;
 }
 .panel-header-badge {
-    font-size: 0.65rem;
-    padding: 1px 5px;
+    font-size: 0.62rem;
+    padding: 1px 4px;
     border-radius: 3px;
     font-weight: 700;
 }
@@ -307,11 +487,11 @@ html, body {
 /* UPPER ROW: OPTICAL VIEWPORTS */
 .optical-viewports-row {
     flex: 0 0 auto !important;
-    height: 240px !important;
-    max-height: 240px !important;
+    height: 215px !important;
+    max-height: 215px !important;
     overflow: hidden !important;
     display: flex !important;
-    gap: 8px !important;
+    gap: 6px !important;
     margin: 0 !important;
 }
 .viewport-card {
@@ -326,8 +506,8 @@ html, body {
 }
 .viewport-card .viewport-content {
     flex: 1 1 auto !important;
-    height: 216px !important;
-    max-height: 216px !important;
+    height: 193px !important;
+    max-height: 193px !important;
     overflow: hidden !important;
     background: #06090f !important;
 }
@@ -335,11 +515,11 @@ html, body {
 /* LOWER ROW: 3 PARALLEL TERMINALS */
 .terminals-matrix-row {
     flex: 1 1 auto !important;
-    height: calc(100% - 280px) !important;
-    min-height: 200px !important;
+    height: calc(100% - 275px) !important;
+    min-height: 180px !important;
     overflow: hidden !important;
     display: flex !important;
-    gap: 8px !important;
+    gap: 6px !important;
     margin: 0 !important;
 }
 .cockpit-terminal-card {
@@ -354,11 +534,11 @@ html, body {
 }
 .cockpit-terminal-body {
     flex: 1 1 auto !important;
-    height: calc(100% - 24px) !important;
+    height: calc(100% - 22px) !important;
     overflow-y: auto !important;
-    padding: 8px 10px !important;
-    font-size: 0.78rem !important;
-    line-height: 1.45 !important;
+    padding: 6px 8px !important;
+    font-size: 0.76rem !important;
+    line-height: 1.4 !important;
     color: #cbd5e1 !important;
     background: #06090f !important;
 }
@@ -370,13 +550,38 @@ html, body {
     border-radius: 2px;
 }
 
+/* LIVE EVENT LOG WIDGET IN LEFT COLUMN */
+.event-logger-box {
+    background: #06090f !important;
+    border: 1px solid #182232 !important;
+    border-radius: 5px !important;
+    overflow: hidden !important;
+}
+.event-logger-body {
+    height: 125px !important;
+    max-height: 125px !important;
+    overflow-y: auto !important;
+    padding: 4px 6px !important;
+    font-size: 0.70rem !important;
+    line-height: 1.35 !important;
+    background: #06090f !important;
+    color: #38bdf8 !important;
+}
+.event-logger-body::-webkit-scrollbar {
+    width: 4px;
+}
+.event-logger-body::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 2px;
+}
+
 /* TERMINAL TEXT FORMATTING */
-.cockpit-terminal-body pre, .cockpit-terminal-body code {
+.cockpit-terminal-body pre, .cockpit-terminal-body code, .event-logger-body pre, .event-logger-body code {
     background: #0d131f !important;
     border: 1px solid #1c2738 !important;
     color: #38bdf8 !important;
-    border-radius: 4px !important;
-    font-size: 0.75rem !important;
+    border-radius: 3px !important;
+    font-size: 0.72rem !important;
 }
 .cockpit-terminal-body a {
     color: #38bdf8 !important;
@@ -387,8 +592,8 @@ html, body {
 }
 .cockpit-terminal-body blockquote {
     border-left: 2px solid #00f0ff !important;
-    margin: 4px 0 !important;
-    padding: 2px 8px !important;
+    margin: 3px 0 !important;
+    padding: 1px 6px !important;
     background: rgba(0, 240, 255, 0.05) !important;
     color: #94a3b8 !important;
 }
@@ -400,7 +605,7 @@ html, body {
     color: #00f0ff !important;
     font-weight: 700 !important;
     letter-spacing: 0.05em !important;
-    font-size: 0.8rem !important;
+    font-size: 0.78rem !important;
     border-radius: 4px !important;
     transition: all 0.2s ease !important;
 }
@@ -413,15 +618,15 @@ html, body {
     background: #0d131f !important;
     border: 1px solid #1c2738 !important;
     color: #94a3b8 !important;
-    font-size: 0.75rem !important;
+    font-size: 0.74rem !important;
     border-radius: 4px !important;
 }
 .term-btn-pill {
     background: #0d131f !important;
     border: 1px solid #1c2738 !important;
     color: #cbd5e1 !important;
-    font-size: 0.72rem !important;
-    padding: 3px 6px !important;
+    font-size: 0.70rem !important;
+    padding: 2px 5px !important;
     border-radius: 3px !important;
 }
 .term-btn-pill:hover {
@@ -458,8 +663,8 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
 
     # 2. Main Full-Window Row
     with gr.Row(elem_classes=["main-cockpit-row"]):
-        # Left: Control Console
-        with gr.Column(scale=3, min_width=290, elem_classes=["control-console-col"]):
+        # Left: Control Console & Live Event Logger
+        with gr.Column(scale=3, min_width=280, elem_classes=["control-console-col"]):
             gr.HTML("""
             <div class="panel-header-bar">
                 <span class="panel-header-title">INPUT_CONSOLE // MISSION_CONTROL</span>
@@ -471,7 +676,7 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
                 type="pil",
                 label="📸 Optical Stream Input",
                 sources=["upload", "clipboard"],
-                height=180
+                height=150
             )
 
             query_input = gr.Textbox(
@@ -486,6 +691,28 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
                 p2_btn = gr.Button("🎬 Venue", size="sm", elem_classes=["term-btn-pill"])
                 p3_btn = gr.Button("🏛️ Landmark", size="sm", elem_classes=["term-btn-pill"])
                 p4_btn = gr.Button("🔬 Inspect", size="sm", elem_classes=["term-btn-pill"])
+
+            with gr.Row():
+                submit_btn = gr.Button("⚡ [ EXECUTE ]", variant="primary", scale=3, elem_classes=["term-btn-primary"])
+                clear_btn = gr.ClearButton([image_input, query_input], value="↺ Reset", scale=1, elem_classes=["term-btn-secondary"])
+
+            # Live Event Logger Widget
+            with gr.Group(elem_classes=["event-logger-box"]):
+                gr.HTML("""
+                <div class="panel-header-bar">
+                    <div class="terminal-dots">
+                        <span class="terminal-dot dot-red"></span>
+                        <span class="terminal-dot dot-yellow"></span>
+                        <span class="terminal-dot dot-green"></span>
+                    </div>
+                    <span class="panel-header-title">SYS_LOG // REALTIME_TRACE</span>
+                    <span class="panel-header-badge" style="background:#0284c7; color:#fff;">STREAM</span>
+                </div>
+                """)
+                event_logs_output = gr.Markdown(
+                    format_event_logs([]),
+                    elem_classes=["event-logger-body"]
+                )
 
             # Settings Accordion
             with gr.Accordion("⚙️ Engine Parameters", open=False):
@@ -506,10 +733,6 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
                     value=True,
                     label="Active Web Grounding (DDG + Wiki)"
                 )
-
-            with gr.Row():
-                submit_btn = gr.Button("⚡ [ EXECUTE ]", variant="primary", scale=3, elem_classes=["term-btn-primary"])
-                clear_btn = gr.ClearButton([image_input, query_input], value="↺ Reset", scale=1, elem_classes=["term-btn-secondary"])
 
             # Preloaded Test Cases
             with gr.Accordion("📂 Preloaded Test Cases", open=False):
@@ -542,10 +765,9 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
 
         # Right: Display Matrix (Upper Viewports + Lower Terminals)
         with gr.Column(scale=9, elem_classes=["display-matrix-col"]):
-            # Status telemetry line
-            status_output = gr.Markdown(
-                "⚡ **[TELEMETRY]**: Ready. Select an example or drop an image and click **[ EXECUTE ]**.",
-                elem_classes=["telemetry-status-bar"]
+            # Dynamic Stepper & HUD Box
+            hud_stepper_output = gr.HTML(
+                format_hud_stepper("INIT", 0, "Ready. Select an example or drop an image and click [EXECUTE].")
             )
 
             # Upper Row: Optical Grounding Matrix (Canvas + Crops side-by-side)
@@ -565,7 +787,7 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
                     """)
                     canvas_output = gr.Image(
                         interactive=False,
-                        height=214,
+                        height=191,
                         show_label=False,
                         elem_classes=["viewport-content"]
                     )
@@ -586,7 +808,7 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
                     crops_gallery = gr.Gallery(
                         columns=3,
                         rows=1,
-                        height=214,
+                        height=191,
                         preview=True,
                         allow_preview=True,
                         object_fit="contain",
@@ -597,7 +819,7 @@ with gr.Blocks(title="OmniSearch Cockpit") as demo:
             # Lower Row: 3 Parallel Side-by-Side Terminals
             with gr.Row(elem_classes=["terminals-matrix-row"]):
                 # Terminal 1: Deep Reasoning Trace (<think>)
-                with gr.Column(scale=1, min_width=240, elem_classes=["cockpit-terminal-card"]):
+                with gr.Column(scale=1, min_width=220, elem_classes=["cockpit-terminal-card"]):
                     gr.HTML("""
                     <div class="panel-header-bar">
                         <div class="terminal-dots">
@@ -619,7 +841,7 @@ omnisearch@agent:~$ cat /proc/reasoning_stream
                     )
 
                 # Terminal 2: Live Web Sources (Active RAG)
-                with gr.Column(scale=1, min_width=240, elem_classes=["cockpit-terminal-card"]):
+                with gr.Column(scale=1, min_width=220, elem_classes=["cockpit-terminal-card"]):
                     gr.HTML("""
                     <div class="panel-header-bar">
                         <div class="terminal-dots">
@@ -641,7 +863,7 @@ omnisearch@agent:~$ netstat --active-rag --monitor
                     )
 
                 # Terminal 3: Final Synthesis
-                with gr.Column(scale=1, min_width=240, elem_classes=["cockpit-terminal-card"]):
+                with gr.Column(scale=1, min_width=220, elem_classes=["cockpit-terminal-card"]):
                     gr.HTML("""
                     <div class="panel-header-bar">
                         <div class="terminal-dots">
@@ -691,7 +913,8 @@ omnisearch@agent:~$ tail -f /var/log/synthesis.md
             model_selector
         ],
         outputs=[
-            status_output,
+            hud_stepper_output,
+            event_logs_output,
             canvas_output,
             crops_gallery,
             thinking_output,
